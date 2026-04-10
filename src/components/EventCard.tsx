@@ -1,6 +1,5 @@
 import { CalendarDays, MapPin, Users } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 interface EventCardProps {
   title: string;
@@ -9,30 +8,71 @@ interface EventCardProps {
   description: string;
   attendees: number;
   image: string;
-  status?: "aberto" | "encerrado" | "em breve";
+  status: "aberto" | "em breve";
 }
 
-const statusColors: Record<string, string> = {
-  aberto: "bg-secondary text-secondary-foreground",
-  encerrado: "bg-muted text-muted-foreground",
-  "em breve": "bg-accent text-accent-foreground",
-};
+const EventCard = ({
+  title,
+  date,
+  location,
+  description,
+  attendees,
+  image,
+  status,
+}: EventCardProps) => (
+  <Card className="h-full flex flex-col overflow-hidden shadow-card hover:shadow-elevated transition-all group cursor-pointer">
+    {/* IMAGEM */}
+    <div className="relative h-52 overflow-hidden">
+      <img
+        src={image}
+        alt={title}
+        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        loading="lazy"
+      />
 
-const EventCard = ({ title, date, location, description, attendees, image, status = "aberto" }: EventCardProps) => (
-  <Card className="overflow-hidden shadow-card hover:shadow-elevated transition-shadow group">
-    <div className="relative h-48 overflow-hidden">
-      <img src={image} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-      <Badge className={`absolute top-3 right-3 ${statusColors[status]} border-0`}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </Badge>
+      {/* STATUS */}
+      <span
+        className={`absolute top-3 right-3 px-2 py-1 text-xs rounded-md font-semibold ${
+          status === "aberto"
+            ? "bg-green-500 text-white"
+            : "bg-yellow-500 text-white"
+        }`}
+      >
+        {status}
+      </span>
+
+      {/* GRADIENT + TÍTULO */}
+      <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
+      <h3 className="absolute bottom-3 left-4 text-lg font-bold text-background">
+        {title}
+      </h3>
     </div>
-    <CardContent className="p-5 space-y-3">
-      <h3 className="text-lg font-bold font-heading text-card-foreground line-clamp-1">{title}</h3>
-      <p className="text-sm text-muted-foreground line-clamp-2">{description}</p>
-      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5" />{date}</span>
-        <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{location}</span>
-        <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" />{attendees} inscritos</span>
+
+    {/* CONTEÚDO */}
+    <CardContent className="p-5 flex flex-col flex-1">
+      {/* INFO */}
+      <div className="text-sm text-muted-foreground space-y-1 mb-2">
+        <span className="flex items-center gap-1">
+          <CalendarDays className="h-4 w-4" />
+          {date}
+        </span>
+        <span className="flex items-center gap-1">
+          <MapPin className="h-4 w-4" />
+          {location}
+        </span>
+      </div>
+
+      {/* DESCRIÇÃO */}
+      <p className="text-sm text-muted-foreground flex-1 line-clamp-2">
+        {description}
+      </p>
+
+      {/* RODAPÉ */}
+      <div className="flex items-center justify-between text-sm mt-4">
+        <span className="flex items-center gap-1 text-muted-foreground">
+          <Users className="h-4 w-4" />
+          {attendees} participantes
+        </span>
       </div>
     </CardContent>
   </Card>

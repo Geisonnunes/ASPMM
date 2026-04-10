@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, User, LogOut, CalendarDays, Image, Shield } from "lucide-react";
+import { Menu, X, User, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import logo from "@/assets/logo.png";
 
 const navLinks = [
   { label: "Início", path: "/" },
@@ -18,23 +19,29 @@ const Navbar = () => {
   const location = useLocation();
   const { user, isAdmin, signOut, profile } = useAuth();
 
+  const isActive = (path) => {
+    if (path === "/") {
+      return location.pathname === "/";
+    }
+    return location.pathname.startsWith(path);
+  };
+
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+    <header className="sticky top-0 z-50 border-b border-border bg-card shadow-sm">
       <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg gradient-hero">
-            <span className="text-lg font-bold text-primary-foreground font-heading">A</span>
-          </div>
-          <span className="text-xl font-bold text-foreground font-heading hidden sm:block">ASPMM</span>
+        {/* LOGO */}
+        <Link to="/">
+          <img src={logo} alt="Logo" style={{ height: "40px" }} />
         </Link>
 
+        {/* MENU DESKTOP */}
         <nav className="hidden lg:flex items-center gap-1">
           {navLinks.map((link) => (
             <Link
               key={link.path}
               to={link.path}
               className={`px-3 py-2 rounded-md text-sm font-medium transition-colors font-body ${
-                location.pathname === link.path
+                isActive(link.path)
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
               }`}
@@ -42,11 +49,12 @@ const Navbar = () => {
               {link.label}
             </Link>
           ))}
+
           {user && (
             <Link
               to="/reservas"
               className={`px-3 py-2 rounded-md text-sm font-medium transition-colors font-body ${
-                location.pathname === "/reservas"
+                isActive("/reservas")
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
               }`}
@@ -56,15 +64,23 @@ const Navbar = () => {
           )}
         </nav>
 
+        {/* AÇÕES DESKTOP */}
         <div className="hidden lg:flex items-center gap-2">
           {user ? (
             <>
               {isAdmin && (
                 <Button asChild variant="outline" size="sm">
-                  <Link to="/admin"><Shield className="mr-1 h-4 w-4" />Admin</Link>
+                  <Link to="/admin">
+                    <Shield className="mr-1 h-4 w-4" />
+                    Admin
+                  </Link>
                 </Button>
               )}
-              <span className="text-sm text-muted-foreground">{profile?.full_name || "Associado"}</span>
+
+              <span className="text-sm text-muted-foreground">
+                {profile?.full_name || "Associado"}
+              </span>
+
               <Button variant="ghost" size="sm" onClick={signOut}>
                 <LogOut className="h-4 w-4" />
               </Button>
@@ -72,22 +88,40 @@ const Navbar = () => {
           ) : (
             <>
               <Button asChild variant="outline" size="sm">
-                <Link to="/login"><User className="mr-1 h-4 w-4" />Entrar</Link>
+                <Link to="/login">
+                  <User className="mr-1 h-4 w-4" />
+                  Entrar
+                </Link>
               </Button>
-              <Button asChild size="sm" className="gradient-hero text-primary-foreground border-0">
+
+              <Button asChild size="sm">
                 <Link to="/cadastro">Cadastrar</Link>
               </Button>
             </>
           )}
         </div>
 
-        <button className="lg:hidden p-2 rounded-md text-foreground hover:bg-muted" onClick={() => setOpen(!open)}>
+        {/* BOTÃO MOBILE */}
+        <button
+          className="lg:hidden p-2 rounded-md text-foreground hover:bg-muted"
+          onClick={() => setOpen((prev) => !prev)}
+          aria-label="Abrir menu"
+        >
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
 
+      {/* OVERLAY */}
       {open && (
-        <div className="lg:hidden border-t border-border bg-card animate-fade-in">
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setOpen(false)}
+        />
+      )}
+
+      {/* MENU MOBILE */}
+      {open && (
+        <div className="lg:hidden border-t border-border bg-card animate-fade-in relative z-50">
           <div className="container py-4 space-y-2">
             {navLinks.map((link) => (
               <Link
@@ -95,7 +129,7 @@ const Navbar = () => {
                 to={link.path}
                 onClick={() => setOpen(false)}
                 className={`block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  location.pathname === link.path
+                  isActive(link.path)
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
@@ -103,19 +137,64 @@ const Navbar = () => {
                 {link.label}
               </Link>
             ))}
+
             {user && (
               <>
-                <Link to="/reservas" onClick={() => setOpen(false)} className="block px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:bg-muted">Reservas</Link>
-                {isAdmin && <Link to="/admin" onClick={() => setOpen(false)} className="block px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:bg-muted">Admin</Link>}
+                <Link
+                  to="/reservas"
+                  onClick={() => setOpen(false)}
+                  className="block px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:bg-muted"
+                >
+                  Reservas
+                </Link>
+
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setOpen(false)}
+                    className="block px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:bg-muted"
+                  >
+                    Admin
+                  </Link>
+                )}
               </>
             )}
+
             <div className="flex gap-2 pt-2">
               {user ? (
-                <Button variant="outline" size="sm" className="flex-1" onClick={() => { signOut(); setOpen(false); }}>Sair</Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => {
+                    signOut();
+                    setOpen(false);
+                  }}
+                >
+                  Sair
+                </Button>
               ) : (
                 <>
-                  <Button asChild variant="outline" size="sm" className="flex-1"><Link to="/login" onClick={() => setOpen(false)}>Entrar</Link></Button>
-                  <Button asChild size="sm" className="flex-1 gradient-hero text-primary-foreground border-0"><Link to="/cadastro" onClick={() => setOpen(false)}>Cadastrar</Link></Button>
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                  >
+                    <Link to="/login" onClick={() => setOpen(false)}>
+                      Entrar
+                    </Link>
+                  </Button>
+
+                  <Button
+                    asChild
+                    size="sm"
+                    className="flex-1 gradient-hero text-primary-foreground border-0"
+                  >
+                    <Link to="/cadastro" onClick={() => setOpen(false)}>
+                      Cadastrar
+                    </Link>
+                  </Button>
                 </>
               )}
             </div>
