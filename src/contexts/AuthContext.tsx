@@ -22,14 +22,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  session: null,
-  loading: true,
-  isAdmin: false,
-  profile: null,
-  signOut: async () => {},
-});
+const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export const useAuth = () => useContext(AuthContext);
 
@@ -41,25 +34,59 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
 
   useEffect(() => {
-    setLoading(false);
+    // 🔥 pega sessão atual
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setUser(data.session?.user ?? null);
+
+      if (data.session?.user) {
+        fetchProfile(data.session.user.id);
+        checkAdmin(data.session.user.id);
+      }
+
+      setLoading(false);
+    });
+
+    // 🔥 escuta mudanças (login/logout)
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        if (session?.user) {
+          fetchProfile(session.user.id);
+          checkAdmin(session.user.id);
+        } else {
+          setProfile(null);
+          setIsAdmin(false);
+        }
+      },
+    );
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
+  // 🔥 perfil
   const fetchProfile = async (userId: string) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("profiles")
       .select("full_name, phone, cpf, membership_status")
       .eq("user_id", userId)
       .single();
-    if (data) setProfile(data);
+
+    if (!error && data) setProfile(data);
   };
 
+  // 🔥 admin (USANDO SUA FUNCTION DO BANCO)
   const checkAdmin = async (userId: string) => {
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("role", "admin");
-    setIsAdmin((data && data.length > 0) ?? false);
+    const { data, error } = await supabase.rpc("has_role", {
+      _user_id: userId,
+      _role: "admin",
+    });
+
+    if (!error) setIsAdmin(!!data);
   };
 
   const signOut = async () => {

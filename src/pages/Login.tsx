@@ -18,17 +18,35 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
+
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    setLoading(false);
+
     if (error) {
+      setLoading(false);
       toast.error("Erro ao entrar: " + error.message);
-    } else {
-      toast.success("Bem-vindo de volta!");
-      navigate("/");
+      return;
     }
+
+    // 🔍 Verifica se existe na tabela profiles
+    const { data: usuario, error: userError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", data.user.id)
+      .single();
+
+    setLoading(false);
+
+    if (userError || !usuario) {
+      toast.error("Usuário não autorizado");
+      await supabase.auth.signOut();
+      return;
+    }
+
+    toast.success("Bem-vindo de volta!");
+    navigate("/");
   };
 
   return (
