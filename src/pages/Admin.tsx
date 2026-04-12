@@ -2,7 +2,16 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import {
-  CalendarDays, Users, MapPin, Bell, Settings, Plus, Check, X, Trash2, LayoutDashboard,
+  CalendarDays,
+  Users,
+  MapPin,
+  Bell,
+  Settings,
+  Plus,
+  Check,
+  X,
+  Trash2,
+  LayoutDashboard,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,8 +21,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -26,7 +47,12 @@ const Admin = () => {
     if (!authLoading && (!user || !isAdmin)) navigate("/");
   }, [user, isAdmin, authLoading]);
 
-  if (authLoading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Carregando...</div>;
+  if (authLoading)
+    return (
+      <div className="min-h-screen flex items-center justify-center text-muted-foreground">
+        Carregando...
+      </div>
+    );
   if (!isAdmin) return null;
 
   return (
@@ -44,18 +70,43 @@ const Admin = () => {
         <div className="container">
           <Tabs defaultValue="reservas">
             <TabsList className="mb-6 flex-wrap">
-              <TabsTrigger value="reservas"><CalendarDays className="mr-1 h-4 w-4" />Reservas</TabsTrigger>
-              <TabsTrigger value="eventos"><CalendarDays className="mr-1 h-4 w-4" />Eventos</TabsTrigger>
-              <TabsTrigger value="usuarios"><Users className="mr-1 h-4 w-4" />Usuários</TabsTrigger>
-              <TabsTrigger value="espacos"><MapPin className="mr-1 h-4 w-4" />Espaços</TabsTrigger>
-              <TabsTrigger value="avisos"><Bell className="mr-1 h-4 w-4" />Avisos</TabsTrigger>
+              <TabsTrigger value="reservas">
+                <CalendarDays className="mr-1 h-4 w-4" />
+                Reservas
+              </TabsTrigger>
+              <TabsTrigger value="eventos">
+                <CalendarDays className="mr-1 h-4 w-4" />
+                Eventos
+              </TabsTrigger>
+              <TabsTrigger value="usuarios">
+                <Users className="mr-1 h-4 w-4" />
+                Usuários
+              </TabsTrigger>
+              <TabsTrigger value="espacos">
+                <MapPin className="mr-1 h-4 w-4" />
+                Espaços
+              </TabsTrigger>
+              <TabsTrigger value="avisos">
+                <Bell className="mr-1 h-4 w-4" />
+                Avisos
+              </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="reservas"><AdminReservations /></TabsContent>
-            <TabsContent value="eventos"><AdminEvents /></TabsContent>
-            <TabsContent value="usuarios"><AdminUsers /></TabsContent>
-            <TabsContent value="espacos"><AdminFacilities /></TabsContent>
-            <TabsContent value="avisos"><AdminAnnouncements /></TabsContent>
+            <TabsContent value="reservas">
+              <AdminReservations />
+            </TabsContent>
+            <TabsContent value="eventos">
+              <AdminEvents />
+            </TabsContent>
+            <TabsContent value="usuarios">
+              <AdminUsers />
+            </TabsContent>
+            <TabsContent value="espacos">
+              <AdminFacilities />
+            </TabsContent>
+            <TabsContent value="avisos">
+              <AdminAnnouncements />
+            </TabsContent>
           </Tabs>
         </div>
       </section>
@@ -68,7 +119,9 @@ const Admin = () => {
 function AdminReservations() {
   const [reservations, setReservations] = useState<any[]>([]);
 
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => {
+    fetch();
+  }, []);
 
   const fetch = async () => {
     const { data } = await supabase
@@ -79,9 +132,15 @@ function AdminReservations() {
   };
 
   const updateStatus = async (id: string, status: string) => {
-    const { error } = await supabase.from("reservations").update({ status }).eq("id", id);
+    const { error } = await supabase
+      .from("reservations")
+      .update({ status })
+      .eq("id", id);
     if (error) toast.error(error.message);
-    else { toast.success(`Reserva ${status}!`); fetch(); }
+    else {
+      toast.success(`Reserva ${status}!`);
+      fetch();
+    }
   };
 
   const statusColors: Record<string, string> = {
@@ -92,25 +151,48 @@ function AdminReservations() {
 
   return (
     <div className="space-y-3">
-      {reservations.length === 0 && <p className="text-muted-foreground">Nenhuma reserva.</p>}
+      {reservations.length === 0 && (
+        <p className="text-muted-foreground">Nenhuma reserva.</p>
+      )}
       {reservations.map((r) => (
         <Card key={r.id} className="shadow-card">
           <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="space-y-1">
-              <p className="font-semibold font-heading text-foreground">{(r.facilities as any)?.name}</p>
-              <p className="text-sm text-muted-foreground">
-                {(r.profiles as any)?.full_name || "Usuário"} · {format(new Date(r.reservation_date + "T00:00:00"), "dd/MM/yyyy")} · {r.start_time?.slice(0,5)}–{r.end_time?.slice(0,5)}
+              <p className="font-semibold font-heading text-foreground">
+                {(r.facilities as any)?.name}
               </p>
-              {r.notes && <p className="text-xs text-muted-foreground">{r.notes}</p>}
+              <p className="text-sm text-muted-foreground">
+                {(r.profiles as any)?.full_name || "Usuário"} ·{" "}
+                {format(
+                  new Date(r.reservation_date + "T00:00:00"),
+                  "dd/MM/yyyy",
+                )}{" "}
+                · {r.start_time?.slice(0, 5)}–{r.end_time?.slice(0, 5)}
+              </p>
+              {r.notes && (
+                <p className="text-xs text-muted-foreground">{r.notes}</p>
+              )}
             </div>
             <div className="flex items-center gap-2">
-              <Badge className={`${statusColors[r.status]} border-0`}>{r.status}</Badge>
+              <Badge className={`${statusColors[r.status]} border-0`}>
+                {r.status}
+              </Badge>
               {r.status === "pendente" && (
                 <>
-                  <Button size="sm" variant="outline" className="text-secondary border-secondary" onClick={() => updateStatus(r.id, "aprovada")}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-secondary border-secondary"
+                    onClick={() => updateStatus(r.id, "aprovada")}
+                  >
                     <Check className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="outline" className="text-destructive border-destructive" onClick={() => updateStatus(r.id, "recusada")}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-destructive border-destructive"
+                    onClick={() => updateStatus(r.id, "recusada")}
+                  >
                     <X className="h-4 w-4" />
                   </Button>
                 </>
@@ -134,27 +216,48 @@ function AdminEvents() {
   const [status, setStatus] = useState("aberto");
   const [maxAttendees, setMaxAttendees] = useState("");
 
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => {
+    fetch();
+  }, []);
 
   const fetch = async () => {
-    const { data } = await supabase.from("events").select("*").order("event_date", { ascending: false });
+    const { data } = await supabase
+      .from("events")
+      .select("*")
+      .order("event_date", { ascending: false });
     if (data) setEvents(data);
   };
 
   const handleCreate = async () => {
-    if (!title || !eventDate) { toast.error("Título e data obrigatórios"); return; }
+    if (!title || !eventDate) {
+      toast.error("Título e data obrigatórios");
+      return;
+    }
     const { error } = await supabase.from("events").insert({
-      title, description, event_date: eventDate, location, status,
+      title,
+      description,
+      event_date: eventDate,
+      location,
+      status,
       max_attendees: maxAttendees ? parseInt(maxAttendees) : null,
     });
     if (error) toast.error(error.message);
-    else { toast.success("Evento criado!"); setOpen(false); setTitle(""); setDescription(""); fetch(); }
+    else {
+      toast.success("Evento criado!");
+      setOpen(false);
+      setTitle("");
+      setDescription("");
+      fetch();
+    }
   };
 
   const deleteEvent = async (id: string) => {
     const { error } = await supabase.from("events").delete().eq("id", id);
     if (error) toast.error(error.message);
-    else { toast.success("Evento excluído"); fetch(); }
+    else {
+      toast.success("Evento excluído");
+      fetch();
+    }
   };
 
   return (
@@ -163,25 +266,61 @@ function AdminEvents() {
         <h3 className="text-lg font-bold font-heading">Eventos</h3>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" className="gradient-hero text-primary-foreground border-0"><Plus className="mr-1 h-4 w-4" />Novo Evento</Button>
+            <Button
+              size="sm"
+              className="gradient-hero text-primary-foreground border-0"
+            >
+              <Plus className="mr-1 h-4 w-4" />
+              Novo Evento
+            </Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle className="font-heading">Criar Evento</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle className="font-heading">Criar Evento</DialogTitle>
+            </DialogHeader>
             <div className="space-y-3">
-              <Input placeholder="Título" value={title} onChange={(e) => setTitle(e.target.value)} />
-              <Textarea placeholder="Descrição" value={description} onChange={(e) => setDescription(e.target.value)} />
-              <Input type="datetime-local" value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
-              <Input placeholder="Local" value={location} onChange={(e) => setLocation(e.target.value)} />
-              <Input type="number" placeholder="Máx. participantes" value={maxAttendees} onChange={(e) => setMaxAttendees(e.target.value)} />
+              <Input
+                placeholder="Título"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+              <Textarea
+                placeholder="Descrição"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+              <Input
+                type="datetime-local"
+                value={eventDate}
+                onChange={(e) => setEventDate(e.target.value)}
+              />
+              <Input
+                placeholder="Local"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+              />
+              <Input
+                type="number"
+                placeholder="Máx. participantes"
+                value={maxAttendees}
+                onChange={(e) => setMaxAttendees(e.target.value)}
+              />
               <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="aberto">Aberto</SelectItem>
                   <SelectItem value="em breve">Em Breve</SelectItem>
                   <SelectItem value="encerrado">Encerrado</SelectItem>
                 </SelectContent>
               </Select>
-              <Button onClick={handleCreate} className="w-full gradient-hero text-primary-foreground border-0">Criar</Button>
+              <Button
+                onClick={handleCreate}
+                className="w-full gradient-hero text-primary-foreground border-0"
+              >
+                Criar
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -192,11 +331,21 @@ function AdminEvents() {
             <CardContent className="p-4 flex items-center justify-between">
               <div>
                 <p className="font-semibold font-heading">{e.title}</p>
-                <p className="text-sm text-muted-foreground">{format(new Date(e.event_date), "dd/MM/yyyy HH:mm")} · {e.location || "—"}</p>
+                <p className="text-sm text-muted-foreground">
+                  {format(new Date(e.event_date), "dd/MM/yyyy HH:mm")} ·{" "}
+                  {e.location || "—"}
+                </p>
               </div>
               <div className="flex gap-2 items-center">
                 <Badge variant="outline">{e.status}</Badge>
-                <Button size="sm" variant="ghost" className="text-destructive" onClick={() => deleteEvent(e.id)}><Trash2 className="h-4 w-4" /></Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-destructive"
+                  onClick={() => deleteEvent(e.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -210,10 +359,15 @@ function AdminEvents() {
 function AdminUsers() {
   const [users, setUsers] = useState<any[]>([]);
 
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => {
+    fetch();
+  }, []);
 
   const fetch = async () => {
-    const { data } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .order("created_at", { ascending: false });
     if (data) setUsers(data);
   };
 
@@ -225,15 +379,23 @@ function AdminUsers() {
 
   return (
     <div className="space-y-3">
-      <h3 className="text-lg font-bold font-heading mb-4">Associados ({users.length})</h3>
+      <h3 className="text-lg font-bold font-heading mb-4">
+        Associados ({users.length})
+      </h3>
       {users.map((u) => (
         <Card key={u.id} className="shadow-card">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="font-semibold font-heading">{u.full_name || "Sem nome"}</p>
-              <p className="text-sm text-muted-foreground">{u.phone || "—"} · {u.cpf || "—"}</p>
+              <p className="font-semibold font-heading">
+                {u.full_name || "Sem nome"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {u.phone || "—"} · {u.cpf || "—"}
+              </p>
             </div>
-            <Badge className={`${statusColors[u.membership_status]} border-0`}>{u.membership_status}</Badge>
+            <Badge className={`${statusColors[u.membership_status]} border-0`}>
+              {u.membership_status}
+            </Badge>
           </CardContent>
         </Card>
       ))}
@@ -250,26 +412,45 @@ function AdminFacilities() {
   const [capacity, setCapacity] = useState("");
   const [rules, setRules] = useState("");
 
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => {
+    fetch();
+  }, []);
 
   const fetch = async () => {
-    const { data } = await supabase.from("facilities").select("*").order("name");
+    const { data } = await supabase
+      .from("facilities")
+      .select("*")
+      .order("name");
     if (data) setFacilities(data);
   };
 
   const handleCreate = async () => {
-    if (!name) { toast.error("Nome obrigatório"); return; }
+    if (!name) {
+      toast.error("Nome obrigatório");
+      return;
+    }
     const { error } = await supabase.from("facilities").insert({
-      name, description, capacity: parseInt(capacity) || 0, rules,
+      name,
+      description,
+      capacity: parseInt(capacity) || 0,
+      rules,
     });
     if (error) toast.error(error.message);
-    else { toast.success("Espaço criado!"); setOpen(false); setName(""); fetch(); }
+    else {
+      toast.success("Espaço criado!");
+      setOpen(false);
+      setName("");
+      fetch();
+    }
   };
 
   const deleteFacility = async (id: string) => {
     const { error } = await supabase.from("facilities").delete().eq("id", id);
     if (error) toast.error(error.message);
-    else { toast.success("Espaço excluído"); fetch(); }
+    else {
+      toast.success("Espaço excluído");
+      fetch();
+    }
   };
 
   return (
@@ -278,16 +459,46 @@ function AdminFacilities() {
         <h3 className="text-lg font-bold font-heading">Espaços</h3>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" className="gradient-hero text-primary-foreground border-0"><Plus className="mr-1 h-4 w-4" />Novo Espaço</Button>
+            <Button
+              size="sm"
+              className="gradient-hero text-primary-foreground border-0"
+            >
+              <Plus className="mr-1 h-4 w-4" />
+              Novo Espaço
+            </Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle className="font-heading">Criar Espaço</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle className="font-heading">Criar Espaço</DialogTitle>
+            </DialogHeader>
             <div className="space-y-3">
-              <Input placeholder="Nome" value={name} onChange={(e) => setName(e.target.value)} />
-              <Textarea placeholder="Descrição" value={description} onChange={(e) => setDescription(e.target.value)} />
-              <Input type="number" placeholder="Capacidade" value={capacity} onChange={(e) => setCapacity(e.target.value)} />
-              <Textarea placeholder="Regras de uso" value={rules} onChange={(e) => setRules(e.target.value)} />
-              <Button onClick={handleCreate} className="w-full gradient-hero text-primary-foreground border-0">Criar</Button>
+              <Input
+                placeholder="Nome"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+              <Textarea
+                placeholder="Descrição"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+              <Input
+                type="number"
+                placeholder="Capacidade"
+                value={capacity}
+                onChange={(e) => setCapacity(e.target.value)}
+              />
+              <Textarea
+                placeholder="Regras de uso"
+                value={rules}
+                onChange={(e) => setRules(e.target.value)}
+              />
+              <Button
+                onClick={handleCreate}
+                className="w-full gradient-hero text-primary-foreground border-0"
+              >
+                Criar
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -298,9 +509,18 @@ function AdminFacilities() {
             <CardContent className="p-4 flex items-center justify-between">
               <div>
                 <p className="font-semibold font-heading">{f.name}</p>
-                <p className="text-sm text-muted-foreground">Capacidade: {f.capacity} · Avaliação: {f.rating}</p>
+                <p className="text-sm text-muted-foreground">
+                  Capacidade: {f.capacity} · Avaliação: {f.rating}
+                </p>
               </div>
-              <Button size="sm" variant="ghost" className="text-destructive" onClick={() => deleteFacility(f.id)}><Trash2 className="h-4 w-4" /></Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-destructive"
+                onClick={() => deleteFacility(f.id)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </CardContent>
           </Card>
         ))}
@@ -316,24 +536,46 @@ function AdminAnnouncements() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => {
+    fetch();
+  }, []);
 
   const fetch = async () => {
-    const { data } = await supabase.from("announcements").select("*").order("created_at", { ascending: false });
+    const { data } = await supabase
+      .from("announcements")
+      .select("*")
+      .order("created_at", { ascending: false });
     if (data) setAnnouncements(data);
   };
 
   const handleCreate = async () => {
-    if (!title || !content) { toast.error("Preencha todos os campos"); return; }
-    const { error } = await supabase.from("announcements").insert({ title, content });
+    if (!title || !content) {
+      toast.error("Preencha todos os campos");
+      return;
+    }
+    const { error } = await supabase
+      .from("announcements")
+      .insert({ title, content });
     if (error) toast.error(error.message);
-    else { toast.success("Aviso publicado!"); setOpen(false); setTitle(""); setContent(""); fetch(); }
+    else {
+      toast.success("Aviso publicado!");
+      setOpen(false);
+      setTitle("");
+      setContent("");
+      fetch();
+    }
   };
 
   const deleteAnnouncement = async (id: string) => {
-    const { error } = await supabase.from("announcements").delete().eq("id", id);
+    const { error } = await supabase
+      .from("announcements")
+      .delete()
+      .eq("id", id);
     if (error) toast.error(error.message);
-    else { toast.success("Aviso excluído"); fetch(); }
+    else {
+      toast.success("Aviso excluído");
+      fetch();
+    }
   };
 
   return (
@@ -342,14 +584,35 @@ function AdminAnnouncements() {
         <h3 className="text-lg font-bold font-heading">Avisos</h3>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" className="gradient-hero text-primary-foreground border-0"><Plus className="mr-1 h-4 w-4" />Novo Aviso</Button>
+            <Button
+              size="sm"
+              className="gradient-hero text-primary-foreground border-0"
+            >
+              <Plus className="mr-1 h-4 w-4" />
+              Novo Aviso
+            </Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle className="font-heading">Criar Aviso</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle className="font-heading">Criar Aviso</DialogTitle>
+            </DialogHeader>
             <div className="space-y-3">
-              <Input placeholder="Título" value={title} onChange={(e) => setTitle(e.target.value)} />
-              <Textarea placeholder="Conteúdo" value={content} onChange={(e) => setContent(e.target.value)} />
-              <Button onClick={handleCreate} className="w-full gradient-hero text-primary-foreground border-0">Publicar</Button>
+              <Input
+                placeholder="Título"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+              <Textarea
+                placeholder="Conteúdo"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+              />
+              <Button
+                onClick={handleCreate}
+                className="w-full gradient-hero text-primary-foreground border-0"
+              >
+                Publicar
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -360,12 +623,25 @@ function AdminAnnouncements() {
             <CardContent className="p-4 flex items-center justify-between">
               <div>
                 <p className="font-semibold font-heading">{a.title}</p>
-                <p className="text-sm text-muted-foreground line-clamp-1">{a.content}</p>
-                <p className="text-xs text-muted-foreground mt-1">{format(new Date(a.created_at), "dd/MM/yyyy")}</p>
+                <p className="text-sm text-muted-foreground line-clamp-1">
+                  {a.content}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {format(new Date(a.created_at), "dd/MM/yyyy")}
+                </p>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant={a.is_active ? "default" : "outline"}>{a.is_active ? "Ativo" : "Inativo"}</Badge>
-                <Button size="sm" variant="ghost" className="text-destructive" onClick={() => deleteAnnouncement(a.id)}><Trash2 className="h-4 w-4" /></Button>
+                <Badge variant={a.is_active ? "default" : "outline"}>
+                  {a.is_active ? "Ativo" : "Inativo"}
+                </Badge>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-destructive"
+                  onClick={() => deleteAnnouncement(a.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
             </CardContent>
           </Card>
