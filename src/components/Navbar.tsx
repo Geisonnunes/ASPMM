@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, User, LogOut, Shield } from "lucide-react";
+import { Menu, X, User, LogOut, Shield, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { skipAdminGuard } from "@/lib/devFlags";
 import logo from "@/assets/logo.png";
 
 const navLinks = [
@@ -18,6 +19,7 @@ const Navbar = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const { user, isAdmin, signOut, profile } = useAuth();
+  const showAdminNav = isAdmin || skipAdminGuard;
 
   const isActive = (path) => {
     if (path === "/") {
@@ -68,13 +70,21 @@ const Navbar = () => {
         <div className="hidden lg:flex items-center gap-2">
           {user ? (
             <>
-              {isAdmin && (
-                <Button asChild variant="outline" size="sm">
-                  <Link to="/admin">
-                    <Shield className="mr-1 h-4 w-4" />
-                    Admin
-                  </Link>
-                </Button>
+              {showAdminNav && (
+                <>
+                  <Button asChild variant="outline" size="sm">
+                    <Link to="/admin">
+                      <Shield className="mr-1 h-4 w-4" />
+                      Admin
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="sm">
+                    <Link to="/admin/conteudo">
+                      <FileText className="mr-1 h-4 w-4" />
+                      Conteúdo
+                    </Link>
+                  </Button>
+                </>
               )}
 
               <span className="text-sm text-muted-foreground">
@@ -87,6 +97,22 @@ const Navbar = () => {
             </>
           ) : (
             <>
+              {skipAdminGuard && (
+                <>
+                  <Button asChild variant="outline" size="sm">
+                    <Link to="/admin">
+                      <Shield className="mr-1 h-4 w-4" />
+                      Admin
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="sm">
+                    <Link to="/admin/conteudo">
+                      <FileText className="mr-1 h-4 w-4" />
+                      Conteúdo
+                    </Link>
+                  </Button>
+                </>
+              )}
               <Button asChild variant="outline" size="sm">
                 <Link to="/login">
                   <User className="mr-1 h-4 w-4" />
@@ -139,24 +165,31 @@ const Navbar = () => {
             ))}
 
             {user && (
+              <Link
+                to="/reservas"
+                onClick={() => setOpen(false)}
+                className="block px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:bg-muted"
+              >
+                Reservas
+              </Link>
+            )}
+
+            {showAdminNav && (
               <>
                 <Link
-                  to="/reservas"
+                  to="/admin"
                   onClick={() => setOpen(false)}
                   className="block px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:bg-muted"
                 >
-                  Reservas
+                  Admin
                 </Link>
-
-                {isAdmin && (
-                  <Link
-                    to="/admin"
-                    onClick={() => setOpen(false)}
-                    className="block px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:bg-muted"
-                  >
-                    Admin
-                  </Link>
-                )}
+                <Link
+                  to="/admin/conteudo"
+                  onClick={() => setOpen(false)}
+                  className="block px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:bg-muted"
+                >
+                  Conteúdo do site
+                </Link>
               </>
             )}
 

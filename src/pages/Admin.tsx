@@ -1,23 +1,26 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import {
   CalendarDays,
   Users,
   MapPin,
   Bell,
-  Settings,
   Plus,
   Check,
   X,
   Trash2,
   LayoutDashboard,
+  FileText,
+  Pencil,
+  Camera,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -38,32 +41,51 @@ import {
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import AdminGallery from "@/components/admin/AdminGallery";
+import { skipAdminGuard } from "@/lib/devFlags";
+import { toDatetimeLocalValue } from "@/lib/eventDisplay";
+import {
+  removePhotosObjectByUrl,
+  uploadToPhotosBucket,
+} from "@/lib/storageUpload";
 
 const Admin = () => {
   const { user, isAdmin, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (skipAdminGuard) return;
     if (!authLoading && (!user || !isAdmin)) navigate("/");
-  }, [user, isAdmin, authLoading]);
+  }, [user, isAdmin, authLoading, navigate]);
 
-  if (authLoading)
+  if (authLoading && !skipAdminGuard)
     return (
       <div className="min-h-screen flex items-center justify-center text-muted-foreground">
         Carregando...
       </div>
     );
-  if (!isAdmin) return null;
+  if (!skipAdminGuard && !isAdmin) return null;
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <section className="gradient-hero py-10">
-        <div className="container">
+        <div className="container flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <h1 className="text-3xl font-extrabold font-heading text-primary-foreground flex items-center gap-3">
             <LayoutDashboard className="h-8 w-8" />
             Painel Administrativo
           </h1>
+          <Button
+            asChild
+            variant="secondary"
+            size="sm"
+            className="shrink-0 self-start sm:self-auto"
+          >
+            <Link to="/admin/conteudo">
+              <FileText className="mr-2 h-4 w-4" />
+              Conteúdo do site
+            </Link>
+          </Button>
         </div>
       </section>
       <section className="py-8">
@@ -90,6 +112,10 @@ const Admin = () => {
                 <Bell className="mr-1 h-4 w-4" />
                 Avisos
               </TabsTrigger>
+              <TabsTrigger value="galeria">
+                <Camera className="mr-1 h-4 w-4" />
+                Galeria
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="reservas">
@@ -106,6 +132,9 @@ const Admin = () => {
             </TabsContent>
             <TabsContent value="avisos">
               <AdminAnnouncements />
+            </TabsContent>
+            <TabsContent value="galeria">
+              <AdminGallery />
             </TabsContent>
           </Tabs>
         </div>
@@ -209,12 +238,34 @@ function AdminReservations() {
 function AdminEvents() {
   const [events, setEvents] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [location, setLocation] = useState("");
   const [status, setStatus] = useState("aberto");
   const [maxAttendees, setMaxAttendees] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previousImageUrl, setPreviousImageUrl] = useState<string | null>(
+    null,
+  );
+  const imageFileInputRef = useRef<HTMLInputElement>(null);
+
+  const resetEventForm = () => {
+    setEditingId(null);
+    setTitle("");
+    setDescription("");
+    setEventDate("");
+    setLocation("");
+    setStatus("aberto");
+    setMaxAttendees("");
+    setImageUrl("");
+    setImageFile(null);
+    setPreviousImageUrl(null);
+    if (imageFileInputRef.current) imageFileInputRef.current.value = "";
+  };
 
   useEffect(() => {
     fetch();
@@ -233,25 +284,99 @@ function AdminEvents() {
       toast.error("Título e data obrigatórios");
       return;
     }
-    const { error } = await supabase.from("events").insert({
-      title,
-      description,
-      event_date: eventDate,
-      location,
-      status,
-      max_attendees: maxAttendees ? parseInt(maxAttendees) : null,
-    });
+    const initialUrl = imageFile ? null : imageUrl.trim() || null;
+    const { data: inserted, error } = await supabase
+      .from("events")
+      .insert({
+        title,
+        description,
+        event_date: eventDate,
+        location,
+        status,
+        max_attendees: maxAttendees ? parseInt(maxAttendees) : null,
+        image_url: initialUrl,
+      })
+      .select("id")
+      .single();
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    if (imageFile && inserted?.id) {
+      const up = await uploadToPhotosBucket(imageFile, `events/${inserted.id}`);
+      if ("error" in up) {
+        toast.error(`Evento criado, mas imagem falhou: ${up.error}`);
+      } else {
+        await supabase
+          .from("events")
+          .update({ image_url: up.publicUrl })
+          .eq("id", inserted.id);
+      }
+    }
+    toast.success("Evento criado!");
+    setOpen(false);
+    resetEventForm();
+    fetch();
+  };
+
+  const openEdit = (e: (typeof events)[0]) => {
+    setEditingId(e.id);
+    setTitle(e.title);
+    setDescription(e.description ?? "");
+    setEventDate(toDatetimeLocalValue(e.event_date));
+    setLocation(e.location ?? "");
+    setStatus(e.status);
+    setMaxAttendees(
+      e.max_attendees != null ? String(e.max_attendees) : "",
+    );
+    setImageUrl(e.image_url ?? "");
+    setPreviousImageUrl(e.image_url ?? null);
+    setImageFile(null);
+    if (imageFileInputRef.current) imageFileInputRef.current.value = "";
+    setEditOpen(true);
+  };
+
+  const handleUpdate = async () => {
+    if (!editingId || !title || !eventDate) {
+      toast.error("Título e data obrigatórios");
+      return;
+    }
+    let nextImageUrl = imageUrl.trim() || null;
+    if (imageFile) {
+      const up = await uploadToPhotosBucket(imageFile, `events/${editingId}`);
+      if ("error" in up) {
+        toast.error(up.error);
+        return;
+      }
+      nextImageUrl = up.publicUrl;
+      if (previousImageUrl && previousImageUrl !== nextImageUrl) {
+        await removePhotosObjectByUrl(previousImageUrl);
+      }
+    }
+    const { error } = await supabase
+      .from("events")
+      .update({
+        title,
+        description,
+        event_date: eventDate,
+        location,
+        status,
+        max_attendees: maxAttendees ? parseInt(maxAttendees) : null,
+        image_url: nextImageUrl,
+      })
+      .eq("id", editingId);
     if (error) toast.error(error.message);
     else {
-      toast.success("Evento criado!");
-      setOpen(false);
-      setTitle("");
-      setDescription("");
+      toast.success("Evento atualizado!");
+      setEditOpen(false);
+      resetEventForm();
       fetch();
     }
   };
 
   const deleteEvent = async (id: string) => {
+    const row = events.find((x) => x.id === id);
+    if (row?.image_url) await removePhotosObjectByUrl(row.image_url);
     const { error } = await supabase.from("events").delete().eq("id", id);
     if (error) toast.error(error.message);
     else {
@@ -260,75 +385,136 @@ function AdminEvents() {
     }
   };
 
+  const eventFormFields = (
+    <>
+      <Input
+        placeholder="Título"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
+      <Textarea
+        placeholder="Descrição"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+      />
+      <Input
+        type="datetime-local"
+        value={eventDate}
+        onChange={(e) => setEventDate(e.target.value)}
+      />
+      <Input
+        placeholder="Local"
+        value={location}
+        onChange={(e) => setLocation(e.target.value)}
+      />
+      <Input
+        placeholder="URL da imagem (opcional; ignorada se escolher ficheiro)"
+        value={imageUrl}
+        onChange={(e) => setImageUrl(e.target.value)}
+      />
+      <div className="space-y-2">
+        <Label htmlFor="event-image-file">Ou enviar imagem</Label>
+        <Input
+          ref={imageFileInputRef}
+          id="event-image-file"
+          type="file"
+          accept="image/*"
+          className="cursor-pointer"
+          onChange={(e) =>
+            setImageFile(e.target.files?.item(0) ?? null)
+          }
+        />
+        {imageFile && (
+          <p className="text-xs text-muted-foreground">{imageFile.name}</p>
+        )}
+      </div>
+      <Input
+        type="number"
+        placeholder="Máx. participantes"
+        value={maxAttendees}
+        onChange={(e) => setMaxAttendees(e.target.value)}
+      />
+      <Select value={status} onValueChange={setStatus}>
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="aberto">Aberto</SelectItem>
+          <SelectItem value="em breve">Em Breve</SelectItem>
+          <SelectItem value="encerrado">Encerrado</SelectItem>
+        </SelectContent>
+      </Select>
+    </>
+  );
+
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-bold font-heading">Eventos</h3>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button
-              size="sm"
-              className="gradient-hero text-primary-foreground border-0"
-            >
-              <Plus className="mr-1 h-4 w-4" />
-              Novo Evento
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="font-heading">Criar Evento</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-3">
-              <Input
-                placeholder="Título"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-              <Textarea
-                placeholder="Descrição"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-              <Input
-                type="datetime-local"
-                value={eventDate}
-                onChange={(e) => setEventDate(e.target.value)}
-              />
-              <Input
-                placeholder="Local"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-              />
-              <Input
-                type="number"
-                placeholder="Máx. participantes"
-                value={maxAttendees}
-                onChange={(e) => setMaxAttendees(e.target.value)}
-              />
-              <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="aberto">Aberto</SelectItem>
-                  <SelectItem value="em breve">Em Breve</SelectItem>
-                  <SelectItem value="encerrado">Encerrado</SelectItem>
-                </SelectContent>
-              </Select>
+        <>
+          <Dialog
+            open={open}
+            onOpenChange={(v) => {
+              setOpen(v);
+              if (!v) resetEventForm();
+            }}
+          >
+            <DialogTrigger asChild>
               <Button
-                onClick={handleCreate}
-                className="w-full gradient-hero text-primary-foreground border-0"
+                size="sm"
+                className="gradient-hero text-primary-foreground border-0"
+                onClick={() => {
+                  resetEventForm();
+                }}
               >
-                Criar
+                <Plus className="mr-1 h-4 w-4" />
+                Novo Evento
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="font-heading">Criar Evento</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                {eventFormFields}
+                <Button
+                  onClick={handleCreate}
+                  className="w-full gradient-hero text-primary-foreground border-0"
+                >
+                  Criar
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog
+            open={editOpen}
+            onOpenChange={(v) => {
+              setEditOpen(v);
+              if (!v) resetEventForm();
+            }}
+          >
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="font-heading">Editar Evento</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                {eventFormFields}
+                <Button
+                  onClick={handleUpdate}
+                  className="w-full gradient-hero text-primary-foreground border-0"
+                >
+                  Guardar alterações
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </>
       </div>
       <div className="space-y-3">
         {events.map((e) => (
           <Card key={e.id} className="shadow-card">
-            <CardContent className="p-4 flex items-center justify-between">
+            <CardContent className="p-4 flex items-center justify-between gap-2 flex-wrap">
               <div>
                 <p className="font-semibold font-heading">{e.title}</p>
                 <p className="text-sm text-muted-foreground">
@@ -338,6 +524,14 @@ function AdminEvents() {
               </div>
               <div className="flex gap-2 items-center">
                 <Badge variant="outline">{e.status}</Badge>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => openEdit(e)}
+                  aria-label="Editar evento"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
                 <Button
                   size="sm"
                   variant="ghost"
@@ -407,10 +601,32 @@ function AdminUsers() {
 function AdminFacilities() {
   const [facilities, setFacilities] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [capacity, setCapacity] = useState("");
   const [rules, setRules] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previousImageUrl, setPreviousImageUrl] = useState<string | null>(
+    null,
+  );
+  const [rating, setRating] = useState("");
+  const facilityImageInputRef = useRef<HTMLInputElement>(null);
+
+  const resetFacilityForm = () => {
+    setEditingId(null);
+    setName("");
+    setDescription("");
+    setCapacity("");
+    setRules("");
+    setImageUrl("");
+    setImageFile(null);
+    setPreviousImageUrl(null);
+    setRating("");
+    if (facilityImageInputRef.current) facilityImageInputRef.current.value = "";
+  };
 
   useEffect(() => {
     fetch();
@@ -429,22 +645,100 @@ function AdminFacilities() {
       toast.error("Nome obrigatório");
       return;
     }
-    const { error } = await supabase.from("facilities").insert({
-      name,
-      description,
-      capacity: parseInt(capacity) || 0,
-      rules,
-    });
+    const initialUrl = imageFile ? null : imageUrl.trim() || null;
+    const { data: inserted, error } = await supabase
+      .from("facilities")
+      .insert({
+        name,
+        description,
+        capacity: parseInt(capacity) || 0,
+        rules,
+        image_url: initialUrl,
+        rating: rating ? parseFloat(rating) : 0,
+      })
+      .select("id")
+      .single();
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    if (imageFile && inserted?.id) {
+      const up = await uploadToPhotosBucket(
+        imageFile,
+        `facilities/${inserted.id}`,
+      );
+      if ("error" in up) {
+        toast.error(`Espaço criado, mas imagem falhou: ${up.error}`);
+      } else {
+        await supabase
+          .from("facilities")
+          .update({ image_url: up.publicUrl })
+          .eq("id", inserted.id);
+      }
+    }
+    toast.success("Espaço criado!");
+    setOpen(false);
+    resetFacilityForm();
+    fetch();
+  };
+
+  const openEdit = (f: (typeof facilities)[0]) => {
+    setEditingId(f.id);
+    setName(f.name);
+    setDescription(f.description ?? "");
+    setCapacity(String(f.capacity ?? ""));
+    setRules(f.rules ?? "");
+    setImageUrl(f.image_url ?? "");
+    setPreviousImageUrl(f.image_url ?? null);
+    setImageFile(null);
+    if (facilityImageInputRef.current) facilityImageInputRef.current.value = "";
+    setRating(f.rating != null ? String(f.rating) : "");
+    setEditOpen(true);
+  };
+
+  const handleUpdate = async () => {
+    if (!editingId || !name) {
+      toast.error("Nome obrigatório");
+      return;
+    }
+    let nextImageUrl = imageUrl.trim() || null;
+    if (imageFile) {
+      const up = await uploadToPhotosBucket(
+        imageFile,
+        `facilities/${editingId}`,
+      );
+      if ("error" in up) {
+        toast.error(up.error);
+        return;
+      }
+      nextImageUrl = up.publicUrl;
+      if (previousImageUrl && previousImageUrl !== nextImageUrl) {
+        await removePhotosObjectByUrl(previousImageUrl);
+      }
+    }
+    const { error } = await supabase
+      .from("facilities")
+      .update({
+        name,
+        description,
+        capacity: parseInt(capacity) || 0,
+        rules,
+        image_url: nextImageUrl,
+        rating: rating ? parseFloat(rating) : 0,
+      })
+      .eq("id", editingId);
     if (error) toast.error(error.message);
     else {
-      toast.success("Espaço criado!");
-      setOpen(false);
-      setName("");
+      toast.success("Espaço atualizado!");
+      setEditOpen(false);
+      resetFacilityForm();
       fetch();
     }
   };
 
   const deleteFacility = async (id: string) => {
+    const row = facilities.find((x) => x.id === id);
+    if (row?.image_url) await removePhotosObjectByUrl(row.image_url);
     const { error } = await supabase.from("facilities").delete().eq("id", id);
     if (error) toast.error(error.message);
     else {
@@ -453,74 +747,152 @@ function AdminFacilities() {
     }
   };
 
+  const facilityFormFields = (
+    <>
+      <Input
+        placeholder="Nome"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      <Textarea
+        placeholder="Descrição"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+      />
+      <Input
+        placeholder="URL da imagem (opcional; ignorada se escolher ficheiro)"
+        value={imageUrl}
+        onChange={(e) => setImageUrl(e.target.value)}
+      />
+      <div className="space-y-2">
+        <Label htmlFor="facility-image-file">Ou enviar imagem</Label>
+        <Input
+          ref={facilityImageInputRef}
+          id="facility-image-file"
+          type="file"
+          accept="image/*"
+          className="cursor-pointer"
+          onChange={(e) =>
+            setImageFile(e.target.files?.item(0) ?? null)
+          }
+        />
+        {imageFile && (
+          <p className="text-xs text-muted-foreground">{imageFile.name}</p>
+        )}
+      </div>
+      <Input
+        type="number"
+        placeholder="Capacidade"
+        value={capacity}
+        onChange={(e) => setCapacity(e.target.value)}
+      />
+      <Input
+        type="number"
+        step="0.1"
+        min={0}
+        max={5}
+        placeholder="Avaliação (0–5)"
+        value={rating}
+        onChange={(e) => setRating(e.target.value)}
+      />
+      <Textarea
+        placeholder="Regras de uso"
+        value={rules}
+        onChange={(e) => setRules(e.target.value)}
+      />
+    </>
+  );
+
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-bold font-heading">Espaços</h3>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button
-              size="sm"
-              className="gradient-hero text-primary-foreground border-0"
-            >
-              <Plus className="mr-1 h-4 w-4" />
-              Novo Espaço
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="font-heading">Criar Espaço</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-3">
-              <Input
-                placeholder="Nome"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-              <Textarea
-                placeholder="Descrição"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-              <Input
-                type="number"
-                placeholder="Capacidade"
-                value={capacity}
-                onChange={(e) => setCapacity(e.target.value)}
-              />
-              <Textarea
-                placeholder="Regras de uso"
-                value={rules}
-                onChange={(e) => setRules(e.target.value)}
-              />
+        <>
+          <Dialog
+            open={open}
+            onOpenChange={(v) => {
+              setOpen(v);
+              if (!v) resetFacilityForm();
+            }}
+          >
+            <DialogTrigger asChild>
               <Button
-                onClick={handleCreate}
-                className="w-full gradient-hero text-primary-foreground border-0"
+                size="sm"
+                className="gradient-hero text-primary-foreground border-0"
+                onClick={() => resetFacilityForm()}
               >
-                Criar
+                <Plus className="mr-1 h-4 w-4" />
+                Novo Espaço
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="font-heading">Criar Espaço</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                {facilityFormFields}
+                <Button
+                  onClick={handleCreate}
+                  className="w-full gradient-hero text-primary-foreground border-0"
+                >
+                  Criar
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog
+            open={editOpen}
+            onOpenChange={(v) => {
+              setEditOpen(v);
+              if (!v) resetFacilityForm();
+            }}
+          >
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="font-heading">Editar Espaço</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                {facilityFormFields}
+                <Button
+                  onClick={handleUpdate}
+                  className="w-full gradient-hero text-primary-foreground border-0"
+                >
+                  Guardar alterações
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </>
       </div>
       <div className="space-y-3">
         {facilities.map((f) => (
           <Card key={f.id} className="shadow-card">
-            <CardContent className="p-4 flex items-center justify-between">
+            <CardContent className="p-4 flex flex-wrap items-center justify-between gap-2">
               <div>
                 <p className="font-semibold font-heading">{f.name}</p>
                 <p className="text-sm text-muted-foreground">
                   Capacidade: {f.capacity} · Avaliação: {f.rating}
                 </p>
               </div>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="text-destructive"
-                onClick={() => deleteFacility(f.id)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => openEdit(f)}
+                  aria-label="Editar espaço"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-destructive"
+                  onClick={() => deleteFacility(f.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ))}
