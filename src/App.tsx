@@ -14,6 +14,7 @@ import Cadastro from "./pages/Cadastro.tsx";
 import Reservas from "./pages/Reservas.tsx";
 import Galeria from "./pages/Galeria.tsx";
 import Admin from "./pages/Admin.tsx";
+import AdminContent from "./pages/AdminContent.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/reservas" element={<Reservas />} />
             <Route path="/galeria" element={<Galeria />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/conteudo" element={<AdminContent />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

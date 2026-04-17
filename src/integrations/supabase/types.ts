@@ -303,6 +303,42 @@ export type Database = {
           },
         ]
       }
+      site_settings: {
+        Row: {
+          editor_description: string
+          editor_title: string
+          hero_badge: string
+          hero_image_url: string | null
+          hero_subtitle: string
+          hero_title: string
+          hero_title_accent: string
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          editor_description?: string
+          editor_title?: string
+          hero_badge?: string
+          hero_image_url?: string | null
+          hero_subtitle?: string
+          hero_title?: string
+          hero_title_accent?: string
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          editor_description?: string
+          editor_title?: string
+          hero_badge?: string
+          hero_image_url?: string | null
+          hero_subtitle?: string
+          hero_title?: string
+          hero_title_accent?: string
+          id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string

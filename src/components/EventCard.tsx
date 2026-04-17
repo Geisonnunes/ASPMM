@@ -1,6 +1,8 @@
 import { CalendarDays, MapPin, Users } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
+export type EventCardStatus = "aberto" | "em breve" | "encerrado";
+
 interface EventCardProps {
   title: string;
   date: string;
@@ -8,7 +10,7 @@ interface EventCardProps {
   description: string;
   attendees: number;
   image: string;
-  status: "aberto" | "em breve";
+  status: EventCardStatus;
 }
 
 const EventCard = ({
@@ -35,7 +37,9 @@ const EventCard = ({
         className={`absolute top-3 right-3 px-2 py-1 text-xs rounded-md font-semibold ${
           status === "aberto"
             ? "bg-green-500 text-white"
-            : "bg-yellow-500 text-white"
+            : status === "em breve"
+              ? "bg-yellow-500 text-white"
+              : "bg-muted-foreground text-background"
         }`}
       >
         {status}
