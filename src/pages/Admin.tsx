@@ -14,7 +14,9 @@ import {
   FileText,
   Pencil,
   Camera,
+  Mail,
 } from "lucide-react";
+import { AdminMessages } from "@/components/admin/AdminMessages";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -116,6 +118,10 @@ const Admin = () => {
                 <Camera className="mr-1 h-4 w-4" />
                 Galeria
               </TabsTrigger>
+              <TabsTrigger value="mensagens">
+                <Mail className="mr-1 h-4 w-4" />
+                Mensagens
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="reservas">
@@ -135,6 +141,9 @@ const Admin = () => {
             </TabsContent>
             <TabsContent value="galeria">
               <AdminGallery />
+            </TabsContent>
+            <TabsContent value="mensagens">
+              <AdminMessages />
             </TabsContent>
           </Tabs>
         </div>
@@ -163,7 +172,7 @@ function AdminReservations() {
   const updateStatus = async (id: string, status: string) => {
     const { error } = await supabase
       .from("reservations")
-      .update({ status })
+      .update({ status } as any)
       .eq("id", id);
     if (error) toast.error(error.message);
     else {
@@ -248,9 +257,7 @@ function AdminEvents() {
   const [maxAttendees, setMaxAttendees] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [previousImageUrl, setPreviousImageUrl] = useState<string | null>(
-    null,
-  );
+  const [previousImageUrl, setPreviousImageUrl] = useState<string | null>(null);
   const imageFileInputRef = useRef<HTMLInputElement>(null);
 
   const resetEventForm = () => {
@@ -309,7 +316,7 @@ function AdminEvents() {
       } else {
         await supabase
           .from("events")
-          .update({ image_url: up.publicUrl })
+          .update({ image_url: up.publicUrl } as any)
           .eq("id", inserted.id);
       }
     }
@@ -326,9 +333,7 @@ function AdminEvents() {
     setEventDate(toDatetimeLocalValue(e.event_date));
     setLocation(e.location ?? "");
     setStatus(e.status);
-    setMaxAttendees(
-      e.max_attendees != null ? String(e.max_attendees) : "",
-    );
+    setMaxAttendees(e.max_attendees != null ? String(e.max_attendees) : "");
     setImageUrl(e.image_url ?? "");
     setPreviousImageUrl(e.image_url ?? null);
     setImageFile(null);
@@ -353,17 +358,18 @@ function AdminEvents() {
         await removePhotosObjectByUrl(previousImageUrl);
       }
     }
+    const eventUpdatePayload = {
+      title,
+      description,
+      event_date: eventDate,
+      location,
+      status,
+      max_attendees: maxAttendees ? parseInt(maxAttendees) : null,
+      image_url: nextImageUrl,
+    } as any;
     const { error } = await supabase
       .from("events")
-      .update({
-        title,
-        description,
-        event_date: eventDate,
-        location,
-        status,
-        max_attendees: maxAttendees ? parseInt(maxAttendees) : null,
-        image_url: nextImageUrl,
-      })
+      .update(eventUpdatePayload)
       .eq("id", editingId);
     if (error) toast.error(error.message);
     else {
@@ -420,9 +426,7 @@ function AdminEvents() {
           type="file"
           accept="image/*"
           className="cursor-pointer"
-          onChange={(e) =>
-            setImageFile(e.target.files?.item(0) ?? null)
-          }
+          onChange={(e) => setImageFile(e.target.files?.item(0) ?? null)}
         />
         {imageFile && (
           <p className="text-xs text-muted-foreground">{imageFile.name}</p>
@@ -496,7 +500,9 @@ function AdminEvents() {
           >
             <DialogContent>
               <DialogHeader>
-                <DialogTitle className="font-heading">Editar Evento</DialogTitle>
+                <DialogTitle className="font-heading">
+                  Editar Evento
+                </DialogTitle>
               </DialogHeader>
               <div className="space-y-3">
                 {eventFormFields}
@@ -609,9 +615,7 @@ function AdminFacilities() {
   const [rules, setRules] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [previousImageUrl, setPreviousImageUrl] = useState<string | null>(
-    null,
-  );
+  const [previousImageUrl, setPreviousImageUrl] = useState<string | null>(null);
   const [rating, setRating] = useState("");
   const facilityImageInputRef = useRef<HTMLInputElement>(null);
 
@@ -672,7 +676,7 @@ function AdminFacilities() {
       } else {
         await supabase
           .from("facilities")
-          .update({ image_url: up.publicUrl })
+          .update({ image_url: up.publicUrl } as any)
           .eq("id", inserted.id);
       }
     }
@@ -716,16 +720,17 @@ function AdminFacilities() {
         await removePhotosObjectByUrl(previousImageUrl);
       }
     }
+    const facilityUpdatePayload = {
+      name,
+      description,
+      capacity: parseInt(capacity) || 0,
+      rules,
+      image_url: nextImageUrl,
+      rating: rating ? parseFloat(rating) : 0,
+    } as any;
     const { error } = await supabase
       .from("facilities")
-      .update({
-        name,
-        description,
-        capacity: parseInt(capacity) || 0,
-        rules,
-        image_url: nextImageUrl,
-        rating: rating ? parseFloat(rating) : 0,
-      })
+      .update(facilityUpdatePayload)
       .eq("id", editingId);
     if (error) toast.error(error.message);
     else {
@@ -772,9 +777,7 @@ function AdminFacilities() {
           type="file"
           accept="image/*"
           className="cursor-pointer"
-          onChange={(e) =>
-            setImageFile(e.target.files?.item(0) ?? null)
-          }
+          onChange={(e) => setImageFile(e.target.files?.item(0) ?? null)}
         />
         {imageFile && (
           <p className="text-xs text-muted-foreground">{imageFile.name}</p>
@@ -850,7 +853,9 @@ function AdminFacilities() {
           >
             <DialogContent>
               <DialogHeader>
-                <DialogTitle className="font-heading">Editar Espaço</DialogTitle>
+                <DialogTitle className="font-heading">
+                  Editar Espaço
+                </DialogTitle>
               </DialogHeader>
               <div className="space-y-3">
                 {facilityFormFields}
