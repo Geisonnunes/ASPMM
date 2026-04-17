@@ -19,29 +19,15 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) {
-      setLoading(false);
-      toast.error("Erro ao entrar: " + error.message);
-      return;
-    }
-
-    // 🔍 Verifica se existe na tabela profiles
-    const { data: usuario, error: userError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", data.user.id)
-      .single();
-
     setLoading(false);
 
-    if (userError || !usuario) {
-      toast.error("Usuário não autorizado");
-      await supabase.auth.signOut();
+    if (error) {
+      toast.error("Erro ao entrar: " + error.message);
       return;
     }
 

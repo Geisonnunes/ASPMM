@@ -29,14 +29,13 @@ const Cadastro = () => {
       password,
       options: {
         data: { full_name: fullName },
-        emailRedirectTo: window.location.origin,
       },
     });
     setLoading(false);
     if (error) {
       toast.error("Erro no cadastro: " + error.message);
     } else {
-      toast.success("Cadastro realizado! Verifique seu email para confirmar.");
+      toast.success("Cadastro realizado com sucesso!");
       navigate("/login");
     }
   };
