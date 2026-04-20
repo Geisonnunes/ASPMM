@@ -558,17 +558,68 @@ function AdminEvents() {
 // ========== USERS TAB ==========
 function AdminUsers() {
   const [users, setUsers] = useState<any[]>([]);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Campos do formulário
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [cpf, setCpf] = useState("");
+  const [password, setPassword] = useState("");
 
   useEffect(() => {
-    fetch();
+    loadUsers();
   }, []);
 
-  const fetch = async () => {
+  const loadUsers = async () => {
     const { data } = await supabase
       .from("profiles")
       .select("*")
       .order("created_at", { ascending: false });
     if (data) setUsers(data);
+  };
+
+  const resetForm = () => {
+    setFullName("");
+    setEmail("");
+    setPhone("");
+    setCpf("");
+    setPassword("");
+  };
+
+  const handleCadastrar = async () => {
+    if (!fullName || !email || !password) {
+      toast.error("Nome, e-mail e senha são obrigatórios.");
+      return;
+    }
+    if (password.length < 6) {
+      toast.error("A senha deve ter pelo menos 6 caracteres.");
+      return;
+    }
+
+    setLoading(true);
+
+    // Pega o token JWT do admin logado para enviar à Edge Function
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+
+    const { data, error } = await supabase.functions.invoke("criar-associado", {
+      body: { fullName, email, password, phone, cpf },
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    setLoading(false);
+
+    if (error || data?.error) {
+      toast.error("Erro ao cadastrar: " + (data?.error || error?.message));
+      return;
+    }
+
+    toast.success(`Associado "${fullName}" cadastrado com sucesso!`);
+    setOpen(false);
+    resetForm();
+    loadUsers();
   };
 
   const statusColors: Record<string, string> = {
@@ -579,9 +630,97 @@ function AdminUsers() {
 
   return (
     <div className="space-y-3">
-      <h3 className="text-lg font-bold font-heading mb-4">
-        Associados ({users.length})
-      </h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold font-heading">
+          Associados ({users.length})
+        </h3>
+        <Dialog
+          open={open}
+          onOpenChange={(v) => {
+            setOpen(v);
+            if (!v) resetForm();
+          }}
+        >
+          <DialogTrigger asChild>
+            <Button size="sm">
+              <Plus className="mr-1 h-4 w-4" />
+              Novo Associado
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="font-heading">
+                Cadastrar Associado
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 mt-2">
+              <div>
+                <Label>Nome Completo *</Label>
+                <Input
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="João da Silva"
+                />
+              </div>
+              <div>
+                <Label>E-mail *</Label>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="associado@email.com"
+                />
+              </div>
+              <div>
+                <Label>Telefone</Label>
+                <Input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="(14) 99999-0000"
+                />
+              </div>
+              <div>
+                <Label>CPF</Label>
+                <Input
+                  value={cpf}
+                  onChange={(e) => setCpf(e.target.value)}
+                  placeholder="000.000.000-00"
+                />
+              </div>
+              <div>
+                <Label>Senha *</Label>
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Mínimo 6 caracteres"
+                />
+              </div>
+              <div className="flex gap-2 justify-end pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setOpen(false);
+                    resetForm();
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button onClick={handleCadastrar} disabled={loading}>
+                  {loading ? "Cadastrando..." : "Cadastrar"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {users.length === 0 && (
+        <p className="text-sm text-muted-foreground text-center py-6">
+          Nenhum associado cadastrado ainda.
+        </p>
+      )}
+
       {users.map((u) => (
         <Card key={u.id} className="shadow-card">
           <CardContent className="p-4 flex items-center justify-between">

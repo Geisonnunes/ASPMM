@@ -27,8 +27,7 @@ const HeroSection = ({ settings }: HeroSectionProps) => {
     settings?.hero_title_accent?.trim() || HERO_DEFAULTS.hero_title_accent;
   const subtitle =
     settings?.hero_subtitle?.trim() || HERO_DEFAULTS.hero_subtitle;
-  const imgSrc =
-    settings?.hero_image_url?.trim() || heroFallback;
+  const imgSrc = settings?.hero_image_url?.trim() || heroFallback;
 
   return (
     <section className="relative min-h-[70vh] flex items-center overflow-hidden">
