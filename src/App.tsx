@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthProvider";
+import AdminRoute from "@/components/AdminRoute";
 import Index from "./pages/Index.tsx";
 import Estrutura from "./pages/Estrutura.tsx";
 import Eventos from "./pages/Eventos.tsx";
@@ -33,7 +34,14 @@ const App = () => (
             <Route path="/regulamento" element={<Regulamento />} />
             <Route path="/contato" element={<Contato />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/cadastro" element={<Cadastro />} />
+            <Route
+              path="/cadastro"
+              element={
+                <AdminRoute>
+                  <Cadastro />
+                </AdminRoute>
+              }
+            />
             <Route path="/reservas" element={<Reservas />} />
             <Route path="/galeria" element={<Galeria />} />
             <Route path="/admin" element={<Admin />} />
