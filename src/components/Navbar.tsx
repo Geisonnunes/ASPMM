@@ -119,10 +119,6 @@ const Navbar = () => {
                   Entrar
                 </Link>
               </Button>
-
-              <Button asChild size="sm">
-                <Link to="/cadastro">Cadastrar</Link>
-              </Button>
             </>
           )}
         </div>
@@ -207,28 +203,11 @@ const Navbar = () => {
                   Sair
                 </Button>
               ) : (
-                <>
-                  <Button
-                    asChild
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                  >
-                    <Link to="/login" onClick={() => setOpen(false)}>
-                      Entrar
-                    </Link>
-                  </Button>
-
-                  <Button
-                    asChild
-                    size="sm"
-                    className="flex-1 gradient-hero text-primary-foreground border-0"
-                  >
-                    <Link to="/cadastro" onClick={() => setOpen(false)}>
-                      Cadastrar
-                    </Link>
-                  </Button>
-                </>
+                <Button asChild variant="outline" size="sm" className="flex-1">
+                  <Link to="/login" onClick={() => setOpen(false)}>
+                    Entrar
+                  </Link>
+                </Button>
               )}
             </div>
           </div>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom"; // Link mantido para o logo
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -85,15 +85,6 @@ const Login = () => {
                 {loading ? "Entrando..." : "Entrar"}
               </Button>
             </form>
-            <p className="text-center text-sm text-muted-foreground mt-4">
-              Não tem conta?{" "}
-              <Link
-                to="/cadastro"
-                className="text-primary font-semibold hover:underline"
-              >
-                Cadastre-se
-              </Link>
-            </p>
           </CardContent>
         </Card>
       </div>
