@@ -6,15 +6,16 @@ export interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isAdmin: boolean;
+  mustChangePassword: boolean;
   profile: {
     full_name: string;
     phone: string | null;
     cpf: string | null;
     membership_status: string;
+    must_change_password: boolean;
   } | null;
   signOut: () => Promise<void>;
 }
-
 export const AuthContext = createContext<AuthContextType>(
   {} as AuthContextType,
 );
