@@ -12,9 +12,8 @@ import logo from "@/assets/logo.png";
 
 /**
  * Página de login — aceita e-mail OU CPF.
- * Após autenticar, verifica must_change_password:
- *   true  → redireciona para /trocar-senha
- *   false → redireciona para /
+ * Após autenticar, o MustChangePasswordGuard cuida do redirecionamento
+ * para /trocar-senha se necessário.
  */
 const Login = () => {
   const [identificador, setIdentificador] = useState(""); // email ou CPF
@@ -28,7 +27,6 @@ const Login = () => {
     const eCPF = /^[\d.\-]+$/.test(valor.trim());
     if (!eCPF) return valor.trim(); // já é email
 
-    // Remove máscara e busca email via RPC segura
     const cpfLimpo = valor.replace(/\D/g, "");
     const { data, error } = await supabase.rpc("get_email_by_cpf", {
       p_cpf: cpfLimpo,
@@ -53,33 +51,23 @@ const Login = () => {
     }
 
     // 2. Autentica
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error || !data.user) {
+    setLoading(false);
+
+    if (error) {
       toast.error("Credenciais inválidas. Verifique e tente novamente.");
-      setLoading(false);
       return;
     }
 
-    // 3. Busca must_change_password no profile
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("must_change_password")
-      .eq("user_id", data.user.id)
-      .single<{ must_change_password: boolean }>();
-
-    setLoading(false);
-
-    if (profile?.must_change_password) {
-      toast.info("Por segurança, defina uma nova senha antes de continuar.");
-      navigate("/trocar-senha", { replace: true });
-    } else {
-      toast.success("Bem-vindo de volta!");
-      navigate("/");
-    }
+    // 3. O onAuthStateChange do AuthProvider vai carregar o profile
+    //    e o MustChangePasswordGuard redireciona para /trocar-senha se necessário.
+    //    Aqui só navegamos para home — o Guard intercepta se precisar.
+    toast.success("Bem-vindo!");
+    navigate("/", { replace: true });
   };
 
   return (
