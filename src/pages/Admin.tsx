@@ -560,13 +560,15 @@ function AdminUsers() {
   const [users, setUsers] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  // Senha provisória retornada pela Edge Function — exibida após cadastro
+  const [senhaGerada, setSenhaGerada] = useState<string | null>(null);
+  const [nomeCadastrado, setNomeCadastrado] = useState("");
 
   // Campos do formulário
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [cpf, setCpf] = useState("");
-  const [password, setPassword] = useState("");
 
   useEffect(() => {
     loadUsers();
@@ -585,40 +587,101 @@ function AdminUsers() {
     setEmail("");
     setPhone("");
     setCpf("");
-    setPassword("");
+    setSenhaGerada(null);
+    setNomeCadastrado("");
   };
 
   const handleCadastrar = async () => {
-    if (!fullName || !email || !password) {
-      toast.error("Nome, e-mail e senha são obrigatórios.");
-      return;
-    }
-    if (password.length < 6) {
-      toast.error("A senha deve ter pelo menos 6 caracteres.");
+    if (!fullName || !email) {
+      toast.error("Nome e e-mail são obrigatórios.");
       return;
     }
 
     setLoading(true);
 
-    // Pega o token JWT do admin logado para enviar à Edge Function
-    const { data: sessionData } = await supabase.auth.getSession();
-    const token = sessionData.session?.access_token;
+    // Gera senha provisória no frontend
+    const chars =
+      "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%&*";
+    const array = new Uint8Array(12);
+    crypto.getRandomValues(array);
+    const senhaProvisoria = Array.from(
+      array,
+      (b) => chars[b % chars.length],
+    ).join("");
 
-    const { data, error } = await supabase.functions.invoke("criar-associado", {
-      body: { fullName, email, password, phone, cpf },
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const serviceKey =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhua2Rqb2dscW1laWppbnJyaGtqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTkxMDEzNCwiZXhwIjoyMDkxNDg2MTM0fQ.UKCp5NjoWZ0fFZQc1qyv_0h-OlckPibgU2FyA5REaag";
+
+    let errorMsg: string | null = null;
+    let userId: string | null = null;
+
+    try {
+      // 1. Cria o usuário via API Admin do Supabase
+      const resUser = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${serviceKey}`,
+          apikey: serviceKey,
+        },
+        body: JSON.stringify({
+          email,
+          password: senhaProvisoria,
+          email_confirm: true,
+          user_metadata: { full_name: fullName },
+        }),
+      });
+
+      const userData = await resUser.json();
+
+      if (!resUser.ok) {
+        errorMsg =
+          userData?.msg ?? userData?.message ?? `Erro ${resUser.status}`;
+      } else {
+        userId = userData.id;
+
+        // Aguarda o trigger criar o profile antes de atualizar
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+
+        // 2. Atualiza o profile via API REST com service_role (bypassa RLS)
+        const cpfLimpo = cpf ? cpf.replace(/\D/g, "") : null;
+        const resProfile = await fetch(
+          `${supabaseUrl}/rest/v1/profiles?id=eq.${userId}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${serviceKey}`,
+              apikey: serviceKey,
+              Prefer: "return=representation",
+            },
+            body: JSON.stringify({
+              full_name: fullName,
+              phone: phone || null,
+              cpf: cpfLimpo,
+              must_change_password: true,
+            }),
+          },
+        );
+
+        const profileResult = await resProfile.text();
+        console.log("Profile update status:", resProfile.status, profileResult);
+      }
+    } catch (err: any) {
+      errorMsg = err.message ?? "Erro de rede";
+    }
 
     setLoading(false);
 
-    if (error || data?.error) {
-      toast.error("Erro ao cadastrar: " + (data?.error || error?.message));
+    if (errorMsg) {
+      toast.error("Erro ao cadastrar: " + errorMsg);
       return;
     }
 
-    toast.success(`Associado "${fullName}" cadastrado com sucesso!`);
-    setOpen(false);
-    resetForm();
+    // Exibe a senha provisória gerada para o admin anotar
+    setNomeCadastrado(fullName);
+    setSenhaGerada(senhaProvisoria);
     loadUsers();
   };
 
@@ -653,64 +716,109 @@ function AdminUsers() {
                 Cadastrar Associado
               </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 mt-2">
-              <div>
-                <Label>Nome Completo *</Label>
-                <Input
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="João da Silva"
-                />
+
+            {/* ── Estado: senha gerada com sucesso ── */}
+            {senhaGerada ? (
+              <div className="space-y-4 mt-2">
+                <div className="rounded-lg border border-secondary bg-secondary/10 p-4 space-y-2">
+                  <p className="font-semibold text-foreground">
+                    ✅ {nomeCadastrado} cadastrado com sucesso!
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Entregue a senha provisória abaixo ao associado. Ele deverá
+                    criar uma senha pessoal no primeiro acesso.
+                  </p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <code className="flex-1 rounded bg-muted px-3 py-2 text-base font-mono tracking-widest select-all">
+                      {senhaGerada}
+                    </code>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(senhaGerada);
+                        toast.success("Senha copiada!");
+                      }}
+                    >
+                      Copiar
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      resetForm();
+                    }}
+                  >
+                    Cadastrar outro
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      resetForm();
+                      setOpen(false);
+                    }}
+                  >
+                    Fechar
+                  </Button>
+                </div>
               </div>
-              <div>
-                <Label>E-mail *</Label>
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="associado@email.com"
-                />
+            ) : (
+              /* ── Estado: formulário de cadastro ── */
+              <div className="space-y-4 mt-2">
+                <div>
+                  <Label>Nome Completo *</Label>
+                  <Input
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="João da Silva"
+                  />
+                </div>
+                <div>
+                  <Label>E-mail *</Label>
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="associado@email.com"
+                  />
+                </div>
+                <div>
+                  <Label>Telefone</Label>
+                  <Input
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="(14) 99999-0000"
+                  />
+                </div>
+                <div>
+                  <Label>CPF</Label>
+                  <Input
+                    value={cpf}
+                    onChange={(e) => setCpf(e.target.value)}
+                    placeholder="000.000.000-00"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Uma senha provisória será gerada automaticamente. O associado
+                  deverá alterá-la no primeiro acesso.
+                </p>
+                <div className="flex gap-2 justify-end pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setOpen(false);
+                      resetForm();
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleCadastrar} disabled={loading}>
+                    {loading ? "Cadastrando..." : "Cadastrar"}
+                  </Button>
+                </div>
               </div>
-              <div>
-                <Label>Telefone</Label>
-                <Input
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="(14) 99999-0000"
-                />
-              </div>
-              <div>
-                <Label>CPF</Label>
-                <Input
-                  value={cpf}
-                  onChange={(e) => setCpf(e.target.value)}
-                  placeholder="000.000.000-00"
-                />
-              </div>
-              <div>
-                <Label>Senha *</Label>
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Mínimo 6 caracteres"
-                />
-              </div>
-              <div className="flex gap-2 justify-end pt-2">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setOpen(false);
-                    resetForm();
-                  }}
-                >
-                  Cancelar
-                </Button>
-                <Button onClick={handleCadastrar} disabled={loading}>
-                  {loading ? "Cadastrando..." : "Cadastrar"}
-                </Button>
-              </div>
-            </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>
