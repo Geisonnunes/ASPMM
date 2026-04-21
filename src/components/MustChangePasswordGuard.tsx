@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 /**
  * Intercepta qualquer navegação quando mustChangePassword === true.
- * Redireciona para /trocar-senha, exceto quando já estiver lá.
+ * Aguarda o loading do AuthProvider antes de decidir o redirecionamento.
  */
 const MustChangePasswordGuard = ({
   children,
@@ -13,9 +13,12 @@ const MustChangePasswordGuard = ({
   const { user, mustChangePassword, loading } = useAuth();
   const location = useLocation();
 
+  // Aguarda o profile ser carregado completamente antes de qualquer decisão
   if (loading) return null;
 
-  if (user && mustChangePassword && location.pathname !== "/trocar-senha") {
+  const rotasLivres = ["/trocar-senha", "/login"];
+
+  if (user && mustChangePassword && !rotasLivres.includes(location.pathname)) {
     return <Navigate to="/trocar-senha" replace />;
   }
 

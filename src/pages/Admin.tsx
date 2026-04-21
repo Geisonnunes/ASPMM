@@ -599,25 +599,21 @@ function AdminUsers() {
 
     setLoading(true);
 
-    // Gera senha provisória no frontend
-    const chars =
-      "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%&*";
-    const array = new Uint8Array(12);
-    crypto.getRandomValues(array);
-    const senhaProvisoria = Array.from(
-      array,
-      (b) => chars[b % chars.length],
-    ).join("");
-
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const serviceKey =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhua2Rqb2dscW1laWppbnJyaGtqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTkxMDEzNCwiZXhwIjoyMDkxNDg2MTM0fQ.UKCp5NjoWZ0fFZQc1qyv_0h-OlckPibgU2FyA5REaag";
-
-    let errorMsg: string | null = null;
-    let userId: string | null = null;
-
     try {
-      // 1. Cria o usuário via API Admin do Supabase
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const serviceKey = import.meta.env.VITE_SUPABASE_SERVICE_KEY;
+
+      // 1. Gera senha provisória
+      const chars =
+        "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%&*";
+      const array = new Uint8Array(12);
+      crypto.getRandomValues(array);
+      const senhaProvisoria = Array.from(
+        array,
+        (b) => chars[b % chars.length],
+      ).join("");
+
+      // 2. Cria o usuário via API Admin
       const resUser = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
         method: "POST",
         headers: {
@@ -636,53 +632,53 @@ function AdminUsers() {
       const userData = await resUser.json();
 
       if (!resUser.ok) {
-        errorMsg =
-          userData?.msg ?? userData?.message ?? `Erro ${resUser.status}`;
-      } else {
-        userId = userData.id;
-
-        // Aguarda o trigger criar o profile antes de atualizar
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-
-        // 2. Atualiza o profile via API REST com service_role (bypassa RLS)
-        const cpfLimpo = cpf ? cpf.replace(/\D/g, "") : null;
-        const resProfile = await fetch(
-          `${supabaseUrl}/rest/v1/profiles?id=eq.${userId}`,
-          {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${serviceKey}`,
-              apikey: serviceKey,
-              Prefer: "return=representation",
-            },
-            body: JSON.stringify({
-              full_name: fullName,
-              phone: phone || null,
-              cpf: cpfLimpo,
-              must_change_password: true,
-            }),
-          },
+        toast.error(
+          "Erro ao cadastrar: " +
+            (userData?.msg ?? userData?.message ?? `Erro ${resUser.status}`),
         );
-
-        const profileResult = await resProfile.text();
-        console.log("Profile update status:", resProfile.status, profileResult);
+        setLoading(false);
+        return;
       }
+
+      const userId = userData.id;
+
+      // 3. Aguarda o trigger criar o profile
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      // 4. Atualiza o profile com os dados extras usando o cliente normal
+      //    (permitido pela nova policy "Admins update any profile")
+      const cpfLimpo = cpf ? cpf.replace(/\D/g, "") : null;
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          full_name: fullName,
+          phone: phone || null,
+          cpf: cpfLimpo,
+          must_change_password: true,
+        })
+        .eq("id", userId);
+
+      if (profileError) {
+        console.error(
+          "[Admin] Erro ao atualizar profile:",
+          profileError.message,
+        );
+        toast.error(
+          "Usuário criado, mas erro ao salvar dados: " + profileError.message,
+        );
+        setLoading(false);
+        return;
+      }
+
+      // 5. Exibe senha provisória para o admin anotar
+      setNomeCadastrado(fullName);
+      setSenhaGerada(senhaProvisoria);
+      loadUsers();
     } catch (err: any) {
-      errorMsg = err.message ?? "Erro de rede";
+      toast.error("Erro ao cadastrar: " + err.message);
     }
 
     setLoading(false);
-
-    if (errorMsg) {
-      toast.error("Erro ao cadastrar: " + errorMsg);
-      return;
-    }
-
-    // Exibe a senha provisória gerada para o admin anotar
-    setNomeCadastrado(fullName);
-    setSenhaGerada(senhaProvisoria);
-    loadUsers();
   };
 
   const statusColors: Record<string, string> = {
