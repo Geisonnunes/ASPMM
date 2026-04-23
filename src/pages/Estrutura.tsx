@@ -4,7 +4,10 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FacilityCard from "@/components/FacilityCard";
 import { supabase } from "@/integrations/supabase/client";
-import { facilityRowToCardProps, type FacilityRow } from "@/lib/facilityDisplay";
+import {
+  facilityRowToCardProps,
+  type FacilityRow,
+} from "@/lib/facilityDisplay";
 
 const Estrutura = () => {
   const [rows, setRows] = useState<FacilityRow[]>([]);
@@ -14,7 +17,9 @@ const Estrutura = () => {
     (async () => {
       const { data, error } = await supabase
         .from("facilities")
-        .select("id, name, description, capacity, rating, image_url")
+        .select(
+          "id, name, description, capacity, rating, image_url, facility_images(id, url, order_index)",
+        )
         .order("name", { ascending: true });
       if (!error && data) setRows(data as FacilityRow[]);
       setLoading(false);

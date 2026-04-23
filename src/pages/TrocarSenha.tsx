@@ -169,7 +169,7 @@ const TrocarSenha = () => {
             <p className="text-center text-xs text-muted-foreground">
               Prefere sair?{" "}
               <button
-                onClick={() => signOut()}
+                onClick={() => navigate("/", { replace: true })}
                 className="underline hover:text-foreground"
               >
                 Encerrar sessão

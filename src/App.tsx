@@ -6,6 +6,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthProvider";
 import AdminRoute from "@/components/AdminRoute";
 import MustChangePasswordGuard from "@/components/MustChangePasswordGuard";
+import { AdminLayout } from "@/components/admin-layout/AdminLayout";
+
+// Páginas públicas
 import Index from "./pages/Index.tsx";
 import Estrutura from "./pages/Estrutura.tsx";
 import Eventos from "./pages/Eventos.tsx";
@@ -16,9 +19,18 @@ import Cadastro from "./pages/Cadastro.tsx";
 import TrocarSenha from "./pages/TrocarSenha.tsx";
 import Reservas from "./pages/Reservas.tsx";
 import Galeria from "./pages/Galeria.tsx";
-import Admin from "./pages/Admin.tsx";
-import AdminContent from "./pages/AdminContent.tsx";
 import NotFound from "./pages/NotFound.tsx";
+
+// Páginas do painel admin
+import Dashboard from "./pages/admin/Dashboard.tsx";
+import Usuarios from "./pages/admin/Usuarios.tsx";
+import ReservasAdmin from "./pages/admin/Reservas.tsx";
+import EventosAdmin from "./pages/admin/Eventos.tsx";
+import Avisos from "./pages/admin/Avisos.tsx";
+import GaleriaAdmin from "./pages/admin/Galeria.tsx";
+import Mensagens from "./pages/admin/Mensagens.tsx";
+import Conteudo from "./pages/admin/Conteudo.tsx";
+import Espacos from "./pages/admin/Espacos.tsx";
 
 const queryClient = new QueryClient();
 
@@ -29,13 +41,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          {/*
-            MustChangePasswordGuard envolve todas as rotas:
-            se o usuário logado tiver must_change_password = true,
-            é redirecionado para /trocar-senha automaticamente.
-          */}
           <MustChangePasswordGuard>
             <Routes>
+              {/* Rotas públicas */}
               <Route path="/" element={<Index />} />
               <Route path="/estrutura" element={<Estrutura />} />
               <Route path="/eventos" element={<Eventos />} />
@@ -43,6 +51,8 @@ const App = () => (
               <Route path="/contato" element={<Contato />} />
               <Route path="/login" element={<Login />} />
               <Route path="/trocar-senha" element={<TrocarSenha />} />
+              <Route path="/reservas" element={<Reservas />} />
+              <Route path="/galeria" element={<Galeria />} />
               <Route
                 path="/cadastro"
                 element={
@@ -51,10 +61,20 @@ const App = () => (
                   </AdminRoute>
                 }
               />
-              <Route path="/reservas" element={<Reservas />} />
-              <Route path="/galeria" element={<Galeria />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/admin/conteudo" element={<AdminContent />} />
+
+              {/* Painel Admin — layout próprio com sidebar */}
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="usuarios" element={<Usuarios />} />
+                <Route path="reservas" element={<ReservasAdmin />} />
+                <Route path="eventos" element={<EventosAdmin />} />
+                <Route path="avisos" element={<Avisos />} />
+                <Route path="espacos" element={<Espacos />} />
+                <Route path="galeria" element={<GaleriaAdmin />} />
+                <Route path="mensagens" element={<Mensagens />} />
+                <Route path="conteudo" element={<Conteudo />} />
+              </Route>
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </MustChangePasswordGuard>

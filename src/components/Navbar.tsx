@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, User, LogOut, Shield, FileText } from "lucide-react";
+import { Menu, X, User, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { skipAdminGuard } from "@/lib/devFlags";
@@ -8,7 +8,7 @@ import logo from "@/assets/logo.png";
 
 const navLinks = [
   { label: "Início", path: "/" },
-  { label: "Estrutura", path: "/estrutura" },
+  { label: "Espaços", path: "/estrutura" },
   { label: "Eventos", path: "/eventos" },
   { label: "Galeria", path: "/galeria" },
   { label: "Regulamento", path: "/regulamento" },
@@ -71,20 +71,12 @@ const Navbar = () => {
           {user ? (
             <>
               {showAdminNav && (
-                <>
-                  <Button asChild variant="outline" size="sm">
-                    <Link to="/admin">
-                      <Shield className="mr-1 h-4 w-4" />
-                      Admin
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" size="sm">
-                    <Link to="/admin/conteudo">
-                      <FileText className="mr-1 h-4 w-4" />
-                      Conteúdo
-                    </Link>
-                  </Button>
-                </>
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/admin">
+                    <Shield className="mr-1 h-4 w-4" />
+                    Painel Admin
+                  </Link>
+                </Button>
               )}
 
               <span className="text-sm text-muted-foreground">
@@ -98,20 +90,12 @@ const Navbar = () => {
           ) : (
             <>
               {skipAdminGuard && (
-                <>
-                  <Button asChild variant="outline" size="sm">
-                    <Link to="/admin">
-                      <Shield className="mr-1 h-4 w-4" />
-                      Admin
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" size="sm">
-                    <Link to="/admin/conteudo">
-                      <FileText className="mr-1 h-4 w-4" />
-                      Conteúdo
-                    </Link>
-                  </Button>
-                </>
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/admin">
+                    <Shield className="mr-1 h-4 w-4" />
+                    Painel Admin
+                  </Link>
+                </Button>
               )}
               <Button asChild variant="outline" size="sm">
                 <Link to="/login">
@@ -171,22 +155,13 @@ const Navbar = () => {
             )}
 
             {showAdminNav && (
-              <>
-                <Link
-                  to="/admin"
-                  onClick={() => setOpen(false)}
-                  className="block px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:bg-muted"
-                >
-                  Admin
-                </Link>
-                <Link
-                  to="/admin/conteudo"
-                  onClick={() => setOpen(false)}
-                  className="block px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:bg-muted"
-                >
-                  Conteúdo do site
-                </Link>
-              </>
+              <Link
+                to="/admin"
+                onClick={() => setOpen(false)}
+                className="block px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:bg-muted"
+              >
+                Painel Admin
+              </Link>
             )}
 
             <div className="flex gap-2 pt-2">
