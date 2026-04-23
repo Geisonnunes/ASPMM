@@ -5,19 +5,17 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import HeroSection, {
-  type SiteSettingsRow,
-} from "@/components/HeroSection";
+import HeroSection, { type SiteSettingsRow } from "@/components/HeroSection";
 import AnnouncementBanner from "@/components/AnnouncementBanner";
 import EventCard from "@/components/EventCard";
 import FacilityCard from "@/components/FacilityCard";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  eventRowToCardProps,
-  type EventRow,
-} from "@/lib/eventDisplay";
+import { eventRowToCardProps, type EventRow } from "@/lib/eventDisplay";
 
-import { facilityRowToCardProps, type FacilityRow } from "@/lib/facilityDisplay";
+import {
+  facilityRowToCardProps,
+  type FacilityRow,
+} from "@/lib/facilityDisplay";
 
 const stats = [
   { icon: Shield, label: "Anos de história", value: "30+" },
@@ -50,12 +48,13 @@ const Index = () => {
         supabase.from("site_settings").select("*").eq("id", 1).maybeSingle(),
         supabase
           .from("facilities")
-          .select("id, name, description, capacity, rating, image_url")
+          .select(
+            "id, name, description, capacity, rating, image_url, facility_images(id, url, order_index)",
+          )
           .order("name", { ascending: true })
           .limit(4),
       ]);
-      if (!evRes.error && evRes.data)
-        setUpcomingRows(evRes.data as EventRow[]);
+      if (!evRes.error && evRes.data) setUpcomingRows(evRes.data as EventRow[]);
       if (!siteRes.error && siteRes.data)
         setSiteSettings(siteRes.data as SiteSettingsRow);
       if (!facRes.error && facRes.data)
@@ -67,8 +66,8 @@ const Index = () => {
 
   const showEditorBlock = Boolean(
     siteSettings &&
-      (siteSettings.editor_title?.trim() ||
-        siteSettings.editor_description?.trim()),
+    (siteSettings.editor_title?.trim() ||
+      siteSettings.editor_description?.trim()),
   );
 
   return (
