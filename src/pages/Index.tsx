@@ -17,12 +17,6 @@ import {
   type FacilityRow,
 } from "@/lib/facilityDisplay";
 
-const stats = [
-  { icon: Shield, label: "Anos de história", value: "30+" },
-  { icon: Trophy, label: "Eventos por ano", value: "50+" },
-  { icon: CalendarDays, label: "Associados ativos", value: "800+" },
-];
-
 const Index = () => {
   const [upcomingRows, setUpcomingRows] = useState<EventRow[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
@@ -92,11 +86,27 @@ const Index = () => {
       )}
       <AnnouncementBanner />
 
-      {/* Stats */}
+      {/* Stats — dinâmicos do banco */}
       <section className="py-12 gradient-hero">
         <div className="container">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
-            {stats.map((s) => (
+            {[
+              {
+                icon: Shield,
+                value: siteSettings?.stat1_value ?? "30+",
+                label: siteSettings?.stat1_label ?? "Anos de história",
+              },
+              {
+                icon: Trophy,
+                value: siteSettings?.stat2_value ?? "50+",
+                label: siteSettings?.stat2_label ?? "Eventos por ano",
+              },
+              {
+                icon: CalendarDays,
+                value: siteSettings?.stat3_value ?? "800+",
+                label: siteSettings?.stat3_label ?? "Associados ativos",
+              },
+            ].map((s) => (
               <motion.div
                 key={s.label}
                 initial={{ opacity: 0, y: 20 }}
