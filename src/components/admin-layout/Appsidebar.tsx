@@ -2,13 +2,12 @@ import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   CalendarDays,
-  CalendarCheck,
   Users,
   MapPin,
-  Megaphone,
   Image as ImageIcon,
   MessageSquare,
   FileText,
+  HelpCircle,
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -24,18 +23,19 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
 const items = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
-  { title: "Reservas", url: "/admin/reservas", icon: CalendarCheck },
   { title: "Eventos", url: "/admin/eventos", icon: CalendarDays },
   { title: "Usuários", url: "/admin/usuarios", icon: Users },
   { title: "Espaços", url: "/admin/espacos", icon: MapPin },
-  { title: "Avisos", url: "/admin/avisos", icon: Megaphone },
   { title: "Galeria", url: "/admin/galeria", icon: ImageIcon },
   { title: "Mensagens", url: "/admin/mensagens", icon: MessageSquare },
+  { title: "Informações", url: "/admin/informacoes", icon: HelpCircle },
   { title: "Conteúdo do Site", url: "/admin/conteudo", icon: FileText },
 ];
 
@@ -44,6 +44,20 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const { signOut } = useAuth();
+  const [naoLidas, setNaoLidas] = useState(0);
+
+  useEffect(() => {
+    const load = async () => {
+      const { count } = await supabase
+        .from("contact_messages")
+        .select("*", { count: "exact", head: true })
+        .eq("is_read", false);
+      setNaoLidas(count ?? 0);
+    };
+    load();
+    const interval = setInterval(load, 60000); // atualiza a cada 1 minuto
+    return () => clearInterval(interval);
+  }, []);
   const navigate = useNavigate();
 
   const handleSignOut = async () => {

@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { Bell, Search, ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Bell, Search, ChevronDown, MessageSquare } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,15 +26,8 @@ import {
 } from "@/components/ui/popover";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import {
-  Users,
-  CalendarCheck,
-  CalendarDays,
-  Megaphone,
-  Image,
-  MessageSquare,
-  FileText,
-} from "lucide-react";
+import { Users, CalendarDays, Megaphone, Image, FileText } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const searchOptions = [
   {
@@ -41,12 +35,6 @@ const searchOptions = [
     description: "Buscar associados por nome ou CPF",
     icon: Users,
     path: "/admin/usuarios",
-  },
-  {
-    label: "Reservas",
-    description: "Buscar reservas por associado ou espaço",
-    icon: CalendarCheck,
-    path: "/admin/reservas",
   },
   {
     label: "Eventos",
@@ -80,11 +68,54 @@ const searchOptions = [
   },
 ];
 
+function timeAgo(dateStr: string): string {
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (diff < 60) return "agora";
+  if (diff < 3600) return `há ${Math.floor(diff / 60)} min`;
+  if (diff < 86400) return `há ${Math.floor(diff / 3600)} h`;
+  return `há ${Math.floor(diff / 86400)} d`;
+}
+
 export function AppHeader() {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
+  const [openSearch, setOpenSearch] = useState(false);
+  const [openBell, setOpenBell] = useState(false);
+  const [mensagens, setMensagens] = useState<any[]>([]);
+  const [naoLidas, setNaoLidas] = useState(0);
+
+  useEffect(() => {
+    loadMensagens();
+    const interval = setInterval(loadMensagens, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadMensagens = async () => {
+    const { data } = await supabase
+      .from("contact_messages")
+      .select("id, name, message, created_at, is_read")
+      .order("created_at", { ascending: false })
+      .limit(5);
+    const msgs = data ?? [];
+    setMensagens(msgs);
+    setNaoLidas(msgs.filter((m) => !m.is_read).length);
+  };
+
+  const handleOpenBell = () => {
+    setOpenBell((v) => !v);
+  };
+
+  const handleVerTodas = async () => {
+    setOpenBell(false);
+    navigate("/admin/mensagens");
+    // Marca como lidas
+    await supabase
+      .from("contact_messages")
+      .update({ is_read: true } as any)
+      .eq("is_read", false);
+    setNaoLidas(0);
+  };
 
   const filtered =
     query.trim().length > 0
@@ -98,16 +129,13 @@ export function AppHeader() {
   const handleSelect = (path: string) => {
     navigate(`${path}?q=${encodeURIComponent(query)}`);
     setQuery("");
-    setOpen(false);
+    setOpenSearch(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && filtered.length > 0) {
+    if (e.key === "Enter" && filtered.length > 0)
       handleSelect(filtered[0].path);
-    }
-    if (e.key === "Escape") {
-      setOpen(false);
-    }
+    if (e.key === "Escape") setOpenSearch(false);
   };
 
   const initials = profile?.full_name
@@ -130,19 +158,19 @@ export function AppHeader() {
 
       {/* Barra de busca */}
       <div className="hidden flex-1 md:block">
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={openSearch} onOpenChange={setOpenSearch}>
           <PopoverTrigger asChild>
             <div className="relative max-w-md">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Buscar reservas, usuários, eventos..."
+                placeholder="Buscar usuários, eventos..."
                 className="h-10 rounded-lg border-border bg-muted/50 pl-9 text-sm focus-visible:bg-card"
                 value={query}
                 onChange={(e) => {
                   setQuery(e.target.value);
-                  setOpen(true);
+                  setOpenSearch(true);
                 }}
-                onFocus={() => setOpen(true)}
+                onFocus={() => setOpenSearch(true)}
                 onKeyDown={handleKeyDown}
               />
             </div>
@@ -155,7 +183,7 @@ export function AppHeader() {
             <Command>
               <CommandList>
                 <CommandGroup
-                  heading={query.trim() ? `Ir para...` : "Navegar para"}
+                  heading={query.trim() ? "Ir para..." : "Navegar para"}
                 >
                   {filtered.map((option) => (
                     <CommandItem
@@ -186,8 +214,94 @@ export function AppHeader() {
         </Popover>
       </div>
 
-      {/* Perfil */}
+      {/* Ações do header */}
       <div className="ml-auto flex items-center gap-2">
+        {/* Sino de notificações */}
+        <Popover open={openBell} onOpenChange={setOpenBell}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative h-9 w-9 rounded-lg"
+              onClick={handleOpenBell}
+            >
+              <Bell className="h-5 w-5 text-muted-foreground" />
+              {naoLidas > 0 && (
+                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+                  {naoLidas > 9 ? "9+" : naoLidas}
+                </span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-80 p-0">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+              <p className="text-sm font-semibold text-foreground">
+                Notificações
+              </p>
+              {naoLidas > 0 && (
+                <Badge className="bg-destructive text-destructive-foreground text-[10px]">
+                  {naoLidas} nova{naoLidas > 1 ? "s" : ""}
+                </Badge>
+              )}
+            </div>
+
+            {mensagens.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">
+                Nenhuma mensagem.
+              </p>
+            ) : (
+              <div className="divide-y divide-border">
+                {mensagens.map((m) => (
+                  <div
+                    key={m.id}
+                    className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors ${!m.is_read ? "bg-primary/[0.03]" : ""}`}
+                    onClick={() => {
+                      setOpenBell(false);
+                      navigate("/admin/mensagens");
+                    }}
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold">
+                      {m.name
+                        ?.split(" ")
+                        .map((n: string) => n[0])
+                        .slice(0, 2)
+                        .join("")
+                        .toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-semibold text-foreground truncate">
+                          {m.name}
+                        </p>
+                        {!m.is_read && (
+                          <span className="h-2 w-2 shrink-0 rounded-full bg-destructive" />
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {m.message}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        {timeAgo(m.created_at)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="border-t border-border p-2">
+              <Button
+                variant="ghost"
+                className="w-full text-sm text-primary hover:text-primary"
+                onClick={handleVerTodas}
+              >
+                Ver todas
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {/* Perfil */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
