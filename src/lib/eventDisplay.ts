@@ -22,6 +22,7 @@ export function normalizeEventStatus(s: string): EventStatus {
 export function eventRowToCardProps(row: EventRow) {
   const status = normalizeEventStatus(row.status);
   return {
+    id: row.id,
     title: row.title,
     date: format(new Date(row.event_date), "dd/MM/yyyy 'às' HH:mm"),
     location: row.location ?? "—",

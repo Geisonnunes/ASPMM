@@ -11,7 +11,7 @@ const navLinks = [
   { label: "Espaços", path: "/estrutura" },
   { label: "Eventos", path: "/eventos" },
   { label: "Galeria", path: "/galeria" },
-  { label: "Regulamento", path: "/regulamento" },
+  { label: "Informações", path: "/informacoes" },
   { label: "Contato", path: "/contato" },
 ];
 
@@ -51,19 +51,6 @@ const Navbar = () => {
               {link.label}
             </Link>
           ))}
-
-          {user && (
-            <Link
-              to="/reservas"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors font-body ${
-                isActive("/reservas")
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              }`}
-            >
-              Reservas
-            </Link>
-          )}
         </nav>
 
         {/* AÇÕES DESKTOP */}
@@ -143,16 +130,6 @@ const Navbar = () => {
                 {link.label}
               </Link>
             ))}
-
-            {user && (
-              <Link
-                to="/reservas"
-                onClick={() => setOpen(false)}
-                className="block px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:bg-muted"
-              >
-                Reservas
-              </Link>
-            )}
 
             {showAdminNav && (
               <Link

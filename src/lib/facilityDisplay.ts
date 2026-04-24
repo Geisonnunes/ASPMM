@@ -11,7 +11,6 @@ export type FacilityRow = {
 };
 
 export function facilityRowToCardProps(row: FacilityRow) {
-  // Usa as imagens da tabela facility_images se existirem
   const images =
     row.facility_images && row.facility_images.length > 0
       ? [...row.facility_images]
@@ -22,6 +21,7 @@ export function facilityRowToCardProps(row: FacilityRow) {
         : [defaultFacilityImage];
 
   return {
+    id: row.id,
     name: row.name,
     description: row.description ?? "",
     capacity: row.capacity,
