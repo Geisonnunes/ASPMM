@@ -18,6 +18,7 @@ import Login from "./pages/Login.tsx";
 import Cadastro from "./pages/Cadastro.tsx";
 import TrocarSenha from "./pages/TrocarSenha.tsx";
 import Galeria from "./pages/Galeria.tsx";
+import Convenios from "./pages/Convenios.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 // Páginas do painel admin
@@ -28,6 +29,8 @@ import GaleriaAdmin from "./pages/admin/Galeria.tsx";
 import Mensagens from "./pages/admin/Mensagens.tsx";
 import Conteudo from "./pages/admin/Conteudo.tsx";
 import InformacoesAdmin from "./pages/admin/Informacoes.tsx";
+import ConveniosAdmin from "./pages/admin/Convenios.tsx";
+import EquipeAdmin from "./pages/admin/Equipe.tsx";
 import Espacos from "./pages/admin/Espacos.tsx";
 
 const queryClient = new QueryClient();
@@ -50,6 +53,7 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/trocar-senha" element={<TrocarSenha />} />
               <Route path="/galeria" element={<Galeria />} />
+              <Route path="/convenios" element={<Convenios />} />
               <Route
                 path="/cadastro"
                 element={
@@ -69,6 +73,8 @@ const App = () => (
                 <Route path="mensagens" element={<Mensagens />} />
                 <Route path="conteudo" element={<Conteudo />} />
                 <Route path="informacoes" element={<InformacoesAdmin />} />
+                <Route path="convenios" element={<ConveniosAdmin />} />
+                <Route path="equipe" element={<EquipeAdmin />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />
