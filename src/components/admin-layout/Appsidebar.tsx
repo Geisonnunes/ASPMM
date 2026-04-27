@@ -8,6 +8,8 @@ import {
   MessageSquare,
   FileText,
   HelpCircle,
+  Handshake,
+  UserSquare,
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -35,6 +37,8 @@ const items = [
   { title: "Espaços", url: "/admin/espacos", icon: MapPin },
   { title: "Galeria", url: "/admin/galeria", icon: ImageIcon },
   { title: "Mensagens", url: "/admin/mensagens", icon: MessageSquare },
+  { title: "Convênios", url: "/admin/convenios", icon: Handshake },
+  { title: "Equipe", url: "/admin/equipe", icon: UserSquare },
   { title: "Informações", url: "/admin/informacoes", icon: HelpCircle },
   { title: "Conteúdo do Site", url: "/admin/conteudo", icon: FileText },
 ];

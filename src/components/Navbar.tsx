@@ -11,6 +11,7 @@ const navLinks = [
   { label: "Espaços", path: "/estrutura" },
   { label: "Eventos", path: "/eventos" },
   { label: "Galeria", path: "/galeria" },
+  { label: "Convênios", path: "/convenios" },
   { label: "Informações", path: "/informacoes" },
   { label: "Contato", path: "/contato" },
 ];

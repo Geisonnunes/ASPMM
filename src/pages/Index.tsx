@@ -9,6 +9,7 @@ import HeroSection, { type SiteSettingsRow } from "@/components/HeroSection";
 import AnnouncementBanner from "@/components/AnnouncementBanner";
 import EventCard from "@/components/EventCard";
 import FacilityCard from "@/components/FacilityCard";
+import StaffCard from "@/components/StaffCard";
 import { supabase } from "@/integrations/supabase/client";
 import { eventRowToCardProps, type EventRow } from "@/lib/eventDisplay";
 
@@ -25,11 +26,12 @@ const Index = () => {
   );
   const [facilityRows, setFacilityRows] = useState<FacilityRow[]>([]);
   const [facilitiesLoading, setFacilitiesLoading] = useState(true);
+  const [staffRows, setStaffRows] = useState<any[]>([]);
 
   useEffect(() => {
     (async () => {
       const now = new Date().toISOString();
-      const [evRes, siteRes, facRes] = await Promise.all([
+      const [evRes, siteRes, facRes, staffRes] = await Promise.all([
         supabase
           .from("events")
           .select(
@@ -47,12 +49,19 @@ const Index = () => {
           )
           .order("name", { ascending: true })
           .limit(4),
+        supabase
+          .from("staff")
+          .select("*")
+          .eq("is_active", true)
+          .order("order_index")
+          .limit(8),
       ]);
       if (!evRes.error && evRes.data) setUpcomingRows(evRes.data as EventRow[]);
       if (!siteRes.error && siteRes.data)
         setSiteSettings(siteRes.data as SiteSettingsRow);
       if (!facRes.error && facRes.data)
         setFacilityRows(facRes.data as FacilityRow[]);
+      if (!staffRes.error && staffRes.data) setStaffRows(staffRes.data);
       setEventsLoading(false);
       setFacilitiesLoading(false);
     })();
@@ -215,6 +224,27 @@ const Index = () => {
           )}
         </div>
       </section>
+
+      {/* Equipe */}
+      {staffRows.length > 0 && (
+        <section className="py-16">
+          <div className="container">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold font-heading text-foreground">
+                Nossa Equipe
+              </h2>
+              <p className="text-muted-foreground mt-1">
+                Conheça os responsáveis pela associação
+              </p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-10 justify-items-center">
+              {staffRows.map((s) => (
+                <StaffCard key={s.id} {...s} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <Footer />
     </div>
