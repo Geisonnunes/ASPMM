@@ -32,6 +32,7 @@ import InformacoesAdmin from "./pages/admin/Informacoes.tsx";
 import ConveniosAdmin from "./pages/admin/Convenios.tsx";
 import EquipeAdmin from "./pages/admin/Equipe.tsx";
 import Espacos from "./pages/admin/Espacos.tsx";
+import Avisos from "./pages/admin/Avisos.tsx";
 
 const queryClient = new QueryClient();
 
@@ -63,8 +64,15 @@ const App = () => (
                 }
               />
 
-              {/* Painel Admin — layout próprio com sidebar */}
-              <Route path="/admin" element={<AdminLayout />}>
+              {/* Painel Admin — protegido pelo AdminRoute + layout próprio com sidebar */}
+              <Route
+                path="/admin"
+                element={
+                  <AdminRoute>
+                    <AdminLayout />
+                  </AdminRoute>
+                }
+              >
                 <Route index element={<Dashboard />} />
                 <Route path="usuarios" element={<Usuarios />} />
                 <Route path="eventos" element={<EventosAdmin />} />
@@ -75,6 +83,7 @@ const App = () => (
                 <Route path="informacoes" element={<InformacoesAdmin />} />
                 <Route path="convenios" element={<ConveniosAdmin />} />
                 <Route path="equipe" element={<EquipeAdmin />} />
+                <Route path="avisos" element={<Avisos />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />
