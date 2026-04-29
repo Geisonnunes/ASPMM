@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Plus, Search, MoreVertical, UserX, Pencil } from "lucide-react";
+import {
+  Plus,
+  Search,
+  MoreVertical,
+  UserX,
+  Copy,
+  Check,
+  KeyRound,
+} from "lucide-react";
 import { PageHeader } from "@/components/admin-layout/PageHeader";
 import { StatusBadge } from "@/components/admin-shared/StatusBadge";
 import { EmptyState } from "@/components/admin-shared/EmptyState";
@@ -8,7 +16,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -17,13 +24,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,6 +50,14 @@ export default function Usuarios() {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Modal de senha provisória
+  const [senhaModal, setSenhaModal] = useState<{
+    nome: string;
+    email: string;
+    senha: string;
+  } | null>(null);
+  const [copiado, setCopiado] = useState(false);
+
   // Formulário novo associado
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -62,10 +70,12 @@ export default function Usuarios() {
 
   const loadUsers = async () => {
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("profiles")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) toast.error("Erro ao carregar usuários.");
     setUsers(data ?? []);
     setLoading(false);
   };
@@ -87,6 +97,13 @@ export default function Usuarios() {
     setCpf("");
   };
 
+  const handleCopiarSenha = async () => {
+    if (!senhaModal) return;
+    await navigator.clipboard.writeText(senhaModal.senha);
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 2000);
+  };
+
   const handleCadastrar = async () => {
     if (!fullName || !email) {
       toast.error("Nome e e-mail são obrigatórios.");
@@ -94,59 +111,45 @@ export default function Usuarios() {
     }
     setSaving(true);
 
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const serviceKey = import.meta.env.VITE_SUPABASE_SERVICE_KEY;
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
 
-    const chars =
-      "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%&*";
-    const array = new Uint8Array(12);
-    crypto.getRandomValues(array);
-    const senhaProvisoria = Array.from(
-      array,
-      (b) => chars[b % chars.length],
-    ).join("");
-
-    const resUser = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${serviceKey}`,
-        apikey: serviceKey,
-      },
-      body: JSON.stringify({
-        email,
-        password: senhaProvisoria,
-        email_confirm: true,
-        user_metadata: { full_name: fullName },
-      }),
-    });
-
-    const userData = await resUser.json();
-    if (!resUser.ok) {
-      toast.error("Erro ao cadastrar: " + (userData?.msg ?? userData?.message));
+    if (!token) {
+      toast.error("Sessão expirada. Faça login novamente.");
       setSaving(false);
       return;
     }
 
-    await new Promise((r) => setTimeout(r, 1500));
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const res = await fetch(`${supabaseUrl}/functions/v1/criar-associado`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ fullName, email, phone, cpf }),
+    });
 
-    await supabase
-      .from("profiles")
-      .update({
-        full_name: fullName,
-        phone: phone || null,
-        cpf: cpf ? cpf.replace(/\D/g, "") : null,
-        must_change_password: true,
-      } as any)
-      .eq("id", userData.id);
+    const result = await res.json();
+    setSaving(false);
 
-    toast.success(
-      `Associado "${fullName}" cadastrado! Senha provisória: ${senhaProvisoria}`,
-    );
+    if (!res.ok) {
+      toast.error(result.error ?? "Erro ao cadastrar associado.");
+      return;
+    }
+
+    // Fecha o modal de cadastro e abre o modal de senha
     setOpen(false);
+    const nomeSalvo = fullName;
+    const emailSalvo = email;
     resetForm();
     loadUsers();
-    setSaving(false);
+
+    setSenhaModal({
+      nome: nomeSalvo,
+      email: emailSalvo,
+      senha: result.senhaProvisoria,
+    });
   };
 
   const handleStatusChange = async (userId: string, status: string) => {
@@ -164,6 +167,92 @@ export default function Usuarios() {
 
   return (
     <div className="space-y-6">
+      {/* Modal de senha provisória */}
+      <Dialog
+        open={!!senhaModal}
+        onOpenChange={(v) => {
+          if (!v) {
+            setSenhaModal(null);
+            setCopiado(false);
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-primary" />
+              Associado cadastrado com sucesso!
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <p className="text-sm text-muted-foreground">
+              Anote a senha provisória abaixo e repasse ao associado. Ela{" "}
+              <strong className="text-foreground">
+                não será exibida novamente
+              </strong>
+              .
+            </p>
+
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Nome</Label>
+              <p className="text-sm font-medium text-foreground">
+                {senhaModal?.nome}
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">E-mail</Label>
+              <p className="text-sm font-medium text-foreground">
+                {senhaModal?.email}
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">
+                Senha Provisória
+              </Label>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 rounded-lg border border-border bg-muted/50 px-4 py-3">
+                  <span className="font-mono text-base font-semibold tracking-widest text-foreground">
+                    {senhaModal?.senha}
+                  </span>
+                </div>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  onClick={handleCopiarSenha}
+                  className="h-12 w-12 shrink-0"
+                >
+                  {copiado ? (
+                    <Check className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+              {copiado && (
+                <p className="text-xs text-green-600">Senha copiada!</p>
+              )}
+            </div>
+
+            <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
+              O associado deverá trocar essa senha no primeiro acesso.
+            </p>
+
+            <div className="flex justify-end pt-1">
+              <Button
+                onClick={() => {
+                  setSenhaModal(null);
+                  setCopiado(false);
+                }}
+              >
+                Fechar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <PageHeader
         title="Usuários"
         description="Associados cadastrados na plataforma."

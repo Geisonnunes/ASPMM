@@ -68,7 +68,15 @@ const TrocarSenha = () => {
     setLoading(false);
 
     // 3. Redireciona para o início
-    navigate("/", { replace: true });
+    window.location.replace("/");
+  };
+
+  const handleEncerrarSessao = () => {
+    console.log("[TrocarSenha] Logout iniciado");
+    signOut().finally(() => {
+      console.log("[TrocarSenha] Redirecionando...");
+    });
+    window.location.replace("/");
   };
 
   return (
@@ -169,7 +177,7 @@ const TrocarSenha = () => {
             <p className="text-center text-xs text-muted-foreground">
               Prefere sair?{" "}
               <button
-                onClick={() => navigate("/", { replace: true })}
+                onClick={handleEncerrarSessao}
                 className="underline hover:text-foreground"
               >
                 Encerrar sessão

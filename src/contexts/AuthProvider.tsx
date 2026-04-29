@@ -1,4 +1,4 @@
-import { useEffect, useState, ReactNode } from "react";
+import { useEffect, useState, ReactNode, useRef } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthContext, AuthContextType } from "./AuthContext";
@@ -9,7 +9,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [mustChangePassword, setMustChangePassword] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
+  const mountedRef = useRef(true);
 
   const fetchProfile = async (userId: string) => {
     const { data, error } = await supabase
@@ -24,7 +26,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         must_change_password: boolean | null;
       }>();
 
-    console.log("[AuthProvider] fetchProfile data:", data, "error:", error);
+    if (!mountedRef.current) return;
 
     if (!error && data) {
       setProfile({
@@ -37,28 +39,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setMustChangePassword(data.must_change_password === true);
     }
 
-    // Verifica admin via função SECURITY DEFINER (evita loop de RLS)
     const { data: adminCheck } = await supabase.rpc("has_role", {
       _user_id: userId,
       _role: "admin",
     });
 
+    if (!mountedRef.current) return;
     setIsAdmin(adminCheck === true);
-    console.log(
-      "[AuthProvider] isAdmin:",
-      adminCheck,
-      "mustChangePassword:",
-      mustChangePassword,
-    );
   };
 
   useEffect(() => {
-    let mounted = true;
+    mountedRef.current = true;
 
-    // 1. Carrega sessão já existente (ex: refresh de página)
     const initSession = async () => {
       const { data } = await supabase.auth.getSession();
-      if (!mounted) return;
+      if (!mountedRef.current) return;
 
       setSession(data.session);
       setUser(data.session?.user ?? null);
@@ -67,22 +62,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         await fetchProfile(data.session.user.id);
       }
 
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     };
 
     initSession();
 
-    // 2. Escuta mudanças de auth (login, logout)
-    // IMPORTANTE: callback NÃO pode ser async — chamamos fetchProfile sem await
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        if (!mounted) return;
+        if (!mountedRef.current) return;
 
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Chama sem await — o estado é atualizado de forma assíncrona
           fetchProfile(session.user.id);
         } else {
           setProfile(null);
@@ -93,18 +85,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     );
 
     return () => {
-      mounted = false;
+      mountedRef.current = false;
       listener.subscription.unsubscribe();
     };
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    setIsSigningOut(true);
+    setMustChangePassword(false);
     setUser(null);
     setSession(null);
     setProfile(null);
     setIsAdmin(false);
-    setMustChangePassword(false);
+    await supabase.auth.signOut();
+    setIsSigningOut(false);
   };
 
   return (
@@ -115,6 +109,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         loading,
         isAdmin,
         mustChangePassword,
+        isSigningOut,
         profile,
         signOut,
       }}

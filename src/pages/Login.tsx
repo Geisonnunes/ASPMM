@@ -28,6 +28,13 @@ const Login = () => {
     if (!eCPF) return valor.trim(); // já é email
 
     const cpfLimpo = valor.replace(/\D/g, "");
+
+    // Valida o tamanho do CPF antes de consultar o banco
+    if (cpfLimpo.length !== 11) {
+      toast.error("CPF inválido. Deve ter 11 dígitos.");
+      return null;
+    }
+
     const { data, error } = await supabase.rpc("get_email_by_cpf", {
       p_cpf: cpfLimpo,
     });
