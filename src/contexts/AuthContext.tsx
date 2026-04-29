@@ -7,6 +7,7 @@ export interface AuthContextType {
   loading: boolean;
   isAdmin: boolean;
   mustChangePassword: boolean;
+  isSigningOut: boolean;
   profile: {
     full_name: string;
     phone: string | null;
@@ -16,6 +17,7 @@ export interface AuthContextType {
   } | null;
   signOut: () => Promise<void>;
 }
+
 export const AuthContext = createContext<AuthContextType>(
   {} as AuthContextType,
 );
