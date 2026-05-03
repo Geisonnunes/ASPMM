@@ -130,6 +130,10 @@ export default function Eventos() {
       toast.error("Título e data são obrigatórios.");
       return;
     }
+    if (!imageFile && !form.image_url) {
+      toast.error("Adicione uma imagem para o evento.");
+      return;
+    }
     setSaving(true);
 
     const imageUrl = await uploadImagem();
@@ -224,7 +228,7 @@ export default function Eventos() {
           <div className="space-y-4 mt-2">
             {/* Upload de imagem */}
             <div>
-              <Label>Imagem do Evento</Label>
+              <Label>Imagem do Evento *</Label>
               <div className="mt-1">
                 {imagePreview ? (
                   <div className="relative">

@@ -73,10 +73,10 @@ const Footer = () => (
             </li>
             <li>
               <Link
-                to="/regulamento"
+                to="/informacoes"
                 className="hover:opacity-100 transition-opacity"
               >
-                Regulamento
+                Informações
               </Link>
             </li>
             <li>
