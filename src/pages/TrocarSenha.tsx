@@ -12,10 +12,6 @@ import Footer from "@/components/Footer";
 import logo from "@/assets/logo.png";
 import { Link } from "react-router-dom";
 
-/**
- * Exibida após o primeiro login quando must_change_password === true.
- * O associado DEVE definir uma nova senha antes de acessar qualquer outra página.
- */
 const TrocarSenha = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -38,7 +34,6 @@ const TrocarSenha = () => {
 
     setLoading(true);
 
-    // 1. Atualiza a senha no Supabase Auth
     const { error: authErr } = await supabase.auth.updateUser({
       password: novaSenha,
     });
@@ -49,7 +44,6 @@ const TrocarSenha = () => {
       return;
     }
 
-    // 2. Marca must_change_password = false no profile
     if (user) {
       const { error: profileErr } = await supabase
         .from("profiles")
@@ -67,15 +61,11 @@ const TrocarSenha = () => {
     toast.success("Senha definida com sucesso! Bem-vindo à ASPMM.");
     setLoading(false);
 
-    // 3. Redireciona para o início
     window.location.replace("/");
   };
 
   const handleEncerrarSessao = () => {
-    console.log("[TrocarSenha] Logout iniciado");
-    signOut().finally(() => {
-      console.log("[TrocarSenha] Redirecionando...");
-    });
+    signOut().finally(() => {});
     window.location.replace("/");
   };
 
@@ -191,7 +181,6 @@ const TrocarSenha = () => {
   );
 };
 
-// Componente auxiliar: indicador visual de força da senha
 function PasswordStrength({ senha }: { senha: string }) {
   const checks = [
     senha.length >= 8,
