@@ -38,7 +38,6 @@ async function atualizarProfile(
   for (let tentativa = 1; tentativa <= 5; tentativa++) {
     await delay(500);
 
-    // Verifica se o profile já foi criado pelo trigger
     const { data: profile } = await adminClient
       .from("profiles")
       .select("id")
@@ -46,9 +45,6 @@ async function atualizarProfile(
       .maybeSingle();
 
     if (!profile) {
-      console.log(
-        `[criar-associado] Profile ainda não criado, tentativa ${tentativa}/5...`,
-      );
       continue;
     }
 
@@ -65,10 +61,6 @@ async function atualizarProfile(
       );
       continue;
     }
-
-    console.log(
-      `[criar-associado] Profile atualizado com sucesso na tentativa ${tentativa}.`,
-    );
     return true;
   }
 

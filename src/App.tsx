@@ -8,7 +8,6 @@ import AdminRoute from "@/components/AdminRoute";
 import MustChangePasswordGuard from "@/components/MustChangePasswordGuard";
 import { AdminLayout } from "@/components/admin-layout/AdminLayout";
 
-// Páginas públicas
 import Index from "./pages/Index.tsx";
 import Estrutura from "./pages/Estrutura.tsx";
 import Eventos from "./pages/Eventos.tsx";
@@ -21,7 +20,6 @@ import Galeria from "./pages/Galeria.tsx";
 import Convenios from "./pages/Convenios.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
-// Páginas do painel admin
 import Dashboard from "./pages/admin/Dashboard.tsx";
 import Usuarios from "./pages/admin/Usuarios.tsx";
 import EventosAdmin from "./pages/admin/Eventos.tsx";
