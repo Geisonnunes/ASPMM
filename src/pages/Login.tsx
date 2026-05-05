@@ -10,26 +10,19 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import logo from "@/assets/logo.png";
 
-/**
- * Página de login — aceita e-mail OU CPF.
- * Após autenticar, o MustChangePasswordGuard cuida do redirecionamento
- * para /trocar-senha se necessário.
- */
 const Login = () => {
-  const [identificador, setIdentificador] = useState(""); // email ou CPF
+  const [identificador, setIdentificador] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  /** Se parece com CPF (só dígitos/pontos/traço), busca o email correspondente. */
   const resolverEmail = async (valor: string): Promise<string | null> => {
     const eCPF = /^[\d.\-]+$/.test(valor.trim());
-    if (!eCPF) return valor.trim(); // já é email
+    if (!eCPF) return valor.trim();
 
     const cpfLimpo = valor.replace(/\D/g, "");
 
-    // Valida o tamanho do CPF antes de consultar o banco
     if (cpfLimpo.length !== 11) {
       toast.error("CPF inválido. Deve ter 11 dígitos.");
       return null;
@@ -50,14 +43,12 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
 
-    // 1. Resolve email (pode vir como CPF)
     const email = await resolverEmail(identificador);
     if (!email) {
       setLoading(false);
       return;
     }
 
-    // 2. Autentica
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -70,9 +61,6 @@ const Login = () => {
       return;
     }
 
-    // 3. O onAuthStateChange do AuthProvider vai carregar o profile
-    //    e o MustChangePasswordGuard redireciona para /trocar-senha se necessário.
-    //    Aqui só navegamos para home — o Guard intercepta se precisar.
     toast.success("Bem-vindo!");
     navigate("/", { replace: true });
   };
@@ -110,9 +98,17 @@ const Login = () => {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-foreground block mb-1">
-                  Senha
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-sm font-medium text-foreground">
+                    Senha
+                  </label>
+                  <Link
+                    to="/recuperar-senha"
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Esqueci minha senha
+                  </Link>
+                </div>
                 <div className="relative">
                   <Input
                     type={showPassword ? "text" : "password"}
