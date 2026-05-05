@@ -1,13 +1,11 @@
 import { Link } from "react-router-dom";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
 
-// Importando os ícones de redes sociais do React Icons (Font Awesome)
 import { FaFacebook, FaInstagram, FaWhatsapp } from "react-icons/fa";
 
 const Footer = () => (
   <footer className="bg-foreground text-background">
     <div className="container py-12">
-      {/* Adicionado items-end para alinhar as redes sociais com a base do mapa no desktop */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-end">
         {/* SOBRE E REDES SOCIAIS */}
         <div className="flex flex-col h-full justify-between">
@@ -19,8 +17,6 @@ const Footer = () => (
               desde sua fundação.
             </p>
           </div>
-
-          {/* REDES SOCIAIS - Alinhadas agora com a parte de baixo do mapa */}
           <div className="flex gap-6 mt-8">
             <a
               href="https://www.instagram.com/aspmmarilia/"
@@ -30,7 +26,6 @@ const Footer = () => (
             >
               <FaInstagram className="h-5 w-5" />
             </a>
-
             <a
               href="https://www.facebook.com/people/Associa%C3%A7%C3%A3o-Dos-Servidores-P%C3%BAblicos-Municipais-De-Mar%C3%ADlia-Aspmm/100064044455261/"
               target="_blank"
@@ -39,7 +34,6 @@ const Footer = () => (
             >
               <FaFacebook className="h-5 w-5" />
             </a>
-
             <a
               href="https://wa.me/5514996402112"
               target="_blank"
@@ -105,7 +99,6 @@ const Footer = () => (
                 Avenida José da Silva Nogueira Junior, 555, Marília, SP
               </a>
             </li>
-
             <li className="flex items-center gap-2">
               <Phone className="h-4 w-4 shrink-0" />
               <a
@@ -115,7 +108,6 @@ const Footer = () => (
                 (14) 34333-6743
               </a>
             </li>
-
             <li className="flex items-center gap-2">
               <Mail className="h-4 w-4 shrink-0" />
               <a
@@ -125,14 +117,12 @@ const Footer = () => (
                 aspmmarilia@gmail.com
               </a>
             </li>
-
             <li className="flex items-center gap-2">
               <Clock className="h-4 w-4 shrink-0" />
               <span>Aberto 24 horas</span>
             </li>
           </ul>
 
-          {/* O MAPA */}
           <div className="h-40 w-full rounded-lg overflow-hidden border border-background/10">
             <iframe
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3693.940866504222!2d-49.97341992415147!3d-22.21385411320092!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94bfd1607f0607d7%3A0x67a3bc76f5734268!2sAssocia%C3%A7%C3%A3o%20dos%20Servidores%20P%C3%BAblicos%20Municipais%20de%20Mar%C3%ADlia!5e0!3m2!1spt-BR!2sbr!4v1710000000000"
@@ -151,6 +141,15 @@ const Footer = () => (
       {/* COPYRIGHT */}
       <div className="mt-10 pt-6 border-t border-background/20 text-center text-sm opacity-60">
         © {new Date().getFullYear()} ASPMM — Todos os direitos reservados.
+        Desenvolvido por{" "}
+        <a
+          href="https://wa.me/5514996242035?text=Ol%C3%A1%20Geison!%20Vi%20o%20site%20da%20ASPMM%20e%20fiquei%20impressionado%20com%20o%20trabalho.%20Tenho%20interesse%20em%20desenvolver%20um%20site%20para%20mim%20tamb%C3%A9m.%20Podemos%20conversar%3F"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold opacity-100 hover:text-primary transition-colors"
+        >
+          Geison Nunes
+        </a>
       </div>
     </div>
   </footer>

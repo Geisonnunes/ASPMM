@@ -19,6 +19,8 @@ import TrocarSenha from "./pages/TrocarSenha.tsx";
 import Galeria from "./pages/Galeria.tsx";
 import Convenios from "./pages/Convenios.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import RecuperarSenha from "./pages/RecuperarSenha.tsx";
+import RedefinirSenha from "./pages/RedefinirSenha.tsx";
 
 import Dashboard from "./pages/admin/Dashboard.tsx";
 import Usuarios from "./pages/admin/Usuarios.tsx";
@@ -53,6 +55,8 @@ const App = () => (
               <Route path="/trocar-senha" element={<TrocarSenha />} />
               <Route path="/galeria" element={<Galeria />} />
               <Route path="/convenios" element={<Convenios />} />
+              <Route path="/recuperar-senha" element={<RecuperarSenha />} />
+              <Route path="/redefinir-senha" element={<RedefinirSenha />} />
               <Route
                 path="/cadastro"
                 element={
