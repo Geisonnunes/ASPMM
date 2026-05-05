@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Open+Sans:wght@400;500;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Open+Sans:wght@400;500;600&family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -17,6 +17,7 @@
 
     --primary: 217 71% 35%;
     --primary-foreground: 0 0% 100%;
+    --primary-glow: 217 71% 35% / 0.15;
 
     --secondary: 152 55% 38%;
     --secondary-foreground: 0 0% 100%;
@@ -29,6 +30,7 @@
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
+    --destructive-soft: 0 84% 60% / 0.1;
 
     --border: 214 20% 88%;
     --input: 214 20% 88%;
@@ -45,13 +47,63 @@
     --sidebar-border: 217 71% 40%;
     --sidebar-ring: 217 91% 60%;
 
-    --font-heading: 'Montserrat', sans-serif;
-    --font-body: 'Open Sans', sans-serif;
+    --font-heading: "Montserrat", sans-serif;
+    --font-body: "Open Sans", sans-serif;
 
-    --gradient-hero: linear-gradient(135deg, hsl(217, 71%, 35%) 0%, hsl(152, 55%, 38%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(152, 55%, 38%) 0%, hsl(152, 55%, 48%) 100%);
+    /* Gradientes do site público */
+    --gradient-hero: hsl(var(--primary));
+    --gradient-accent: linear-gradient(
+      135deg,
+      hsl(152, 55%, 38%) 0%,
+      hsl(152, 55%, 48%) 100%
+    );
     --shadow-card: 0 4px 20px -4px hsl(217 71% 35% / 0.1);
     --shadow-elevated: 0 12px 40px -8px hsl(217 71% 35% / 0.15);
+
+    /* Novas variáveis do painel admin */
+    --success: 152 55% 38%;
+    --success-foreground: 0 0% 100%;
+    --success-soft: 152 55% 38% / 0.12;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --warning-soft: 38 92% 50% / 0.12;
+
+    --info: 210 100% 50%;
+    --info-soft: 210 100% 50% / 0.12;
+
+    --brand-red: 0 84% 60%;
+
+    /* Gradientes do painel admin */
+    --gradient-primary: linear-gradient(
+      135deg,
+      hsl(217, 71%, 35%) 0%,
+      hsl(217, 71%, 50%) 100%
+    );
+    --gradient-success: linear-gradient(
+      135deg,
+      hsl(152, 55%, 32%) 0%,
+      hsl(152, 55%, 45%) 100%
+    );
+    --gradient-card: linear-gradient(
+      145deg,
+      hsl(0, 0%, 100%) 0%,
+      hsl(210, 20%, 99%) 100%
+    );
+    --gradient-sidebar: linear-gradient(
+      180deg,
+      hsl(217, 71%, 22%) 0%,
+      hsl(217, 71%, 28%) 100%
+    );
+
+    /* Sombras do painel admin */
+    --shadow-sm:
+      0 1px 3px hsl(217 71% 35% / 0.06), 0 1px 2px hsl(217 71% 35% / 0.04);
+    --shadow-md:
+      0 4px 12px hsl(217 71% 35% / 0.08), 0 2px 4px hsl(217 71% 35% / 0.04);
+    --shadow-lg:
+      0 8px 24px hsl(217 71% 35% / 0.1), 0 4px 8px hsl(217 71% 35% / 0.06);
+    --shadow-glow: 0 0 20px hsl(217 71% 35% / 0.25);
   }
 
   .dark {
@@ -63,6 +115,7 @@
     --popover-foreground: 210 20% 98%;
     --primary: 217 71% 50%;
     --primary-foreground: 0 0% 100%;
+    --primary-glow: 217 71% 50% / 0.2;
     --secondary: 152 55% 45%;
     --secondary-foreground: 0 0% 100%;
     --muted: 213 27% 18%;
@@ -71,9 +124,17 @@
     --accent-foreground: 213 27% 14%;
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
+    --destructive-soft: 0 63% 31% / 0.15;
     --border: 213 27% 22%;
     --input: 213 27% 22%;
     --ring: 217 71% 50%;
+
+    --success: 152 55% 45%;
+    --success-soft: 152 55% 45% / 0.15;
+    --warning: 38 92% 50%;
+    --warning-soft: 38 92% 50% / 0.15;
+    --info: 210 100% 55%;
+    --info-soft: 210 100% 55% / 0.15;
   }
 }
 
@@ -87,7 +148,12 @@
     font-family: var(--font-body);
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-heading);
   }
 }
