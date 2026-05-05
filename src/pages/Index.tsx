@@ -45,10 +45,9 @@ const Index = () => {
         supabase
           .from("facilities")
           .select(
-            "id, name, description, capacity, rating, image_url, facility_images(id, url, order_index)",
+            "id, name, description, capacity, rating, image_url, reserva_ativa, facility_images(id, url, order_index).order(order_index)",
           )
-          .order("name", { ascending: true })
-          .limit(4),
+          .order("name", { ascending: true }),
         supabase
           .from("staff")
           .select("*")
@@ -162,7 +161,7 @@ const Index = () => {
               Ainda não há espaços registados na base.
             </p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {facilityRows.map((row) => (
                 <motion.div
                   key={row.id}

@@ -9,19 +9,10 @@ const MustChangePasswordGuard = ({
   const { user, mustChangePassword, loading, isSigningOut } = useAuth();
   const location = useLocation();
 
-  console.log("[Guard]", {
-    loading,
-    isSigningOut,
-    user: !!user,
-    mustChangePassword,
-    path: location.pathname,
-  });
-
   if (loading) return null;
 
   // Se não está logado e está na /trocar-senha, redireciona para home
   if (!user && location.pathname === "/trocar-senha") {
-    console.log("[Guard] Não logado em /trocar-senha → home");
     return <Navigate to="/" replace />;
   }
 
@@ -30,7 +21,6 @@ const MustChangePasswordGuard = ({
   const rotasLivres = ["/trocar-senha", "/login"];
 
   if (user && mustChangePassword && !rotasLivres.includes(location.pathname)) {
-    console.log("[Guard] Redirecionando para /trocar-senha");
     return <Navigate to="/trocar-senha" replace />;
   }
 

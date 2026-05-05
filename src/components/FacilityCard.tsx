@@ -28,6 +28,7 @@ interface FacilityCardProps {
   capacity: number;
   rating: number;
   images: string[];
+  reservaAtiva?: boolean;
 }
 
 const FacilityCard = ({
@@ -37,6 +38,7 @@ const FacilityCard = ({
   capacity,
   rating,
   images,
+  reservaAtiva = true,
 }: FacilityCardProps) => {
   const { user } = useAuth();
   const [current, setCurrent] = useState(0);
@@ -144,8 +146,8 @@ const FacilityCard = ({
             )}
           </div>
 
-          {/* Botão reservar — só aparece para associados logados */}
-          {user && (
+          {/* Botão reservar — só aparece para associados logados e se reservas estiverem ativas */}
+          {user && reservaAtiva && (
             <Button className="mt-4 w-full" onClick={() => setOpenDialog(true)}>
               <MessageCircle className="mr-2 h-4 w-4" />
               Solicitar Reserva
@@ -175,7 +177,14 @@ const FacilityCard = ({
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                min={new Date().toISOString().split("T")[0]}
+                min={
+                  new Date(
+                    new Date().getTime() -
+                      new Date().getTimezoneOffset() * 60000,
+                  )
+                    .toISOString()
+                    .split("T")[0]
+                }
                 className="mt-1"
               />
             </div>

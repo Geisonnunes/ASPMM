@@ -7,6 +7,7 @@ export type FacilityRow = {
   capacity: number;
   rating: number | null;
   image_url: string | null;
+  reserva_ativa?: boolean | null;
   facility_images?: { id: string; url: string; order_index: number }[];
 };
 
@@ -26,6 +27,7 @@ export function facilityRowToCardProps(row: FacilityRow) {
     description: row.description ?? "",
     capacity: row.capacity,
     rating: row.rating != null ? Number(row.rating) : 0,
+    reservaAtiva: row.reserva_ativa !== false,
     images,
   };
 }

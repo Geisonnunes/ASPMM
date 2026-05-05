@@ -224,32 +224,40 @@ export default function Convenios() {
           <div className="space-y-4 mt-2">
             {/* Logo */}
             <div>
-              <Label>Logo da Empresa</Label>
+              <Label>Imagem do Convênio</Label>
+              <p className="text-xs text-muted-foreground mb-1">
+                Adicione um flyer ou imagem de destaque (máx. 5MB)
+              </p>
               <div className="mt-1">
                 {logoPreview ? (
-                  <div className="relative w-32 h-32">
+                  <div className="relative w-full">
                     <img
                       src={logoPreview}
-                      alt="Logo"
-                      className="w-full h-full object-contain rounded-lg border border-border bg-muted/30"
+                      alt="Preview"
+                      className="w-full h-48 object-cover rounded-lg border border-border"
                     />
                     <button
                       onClick={() => {
                         setLogoPreview("");
                         set("logo_url", "");
                       }}
-                      className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1"
+                      className="absolute top-2 right-2 bg-destructive text-destructive-foreground rounded-full p-1"
                     >
                       <X className="h-3 w-3" />
                     </button>
                   </div>
                 ) : (
                   <label
-                    className={`flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed border-border rounded-lg cursor-pointer bg-muted/30 hover:bg-muted/60 transition-colors ${uploading ? "opacity-60 pointer-events-none" : ""}`}
+                    className={`flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-border rounded-lg cursor-pointer bg-muted/30 hover:bg-muted/60 transition-colors ${uploading ? "opacity-60 pointer-events-none" : ""}`}
                   >
-                    <Upload className="h-6 w-6 text-muted-foreground mb-1" />
-                    <span className="text-xs text-muted-foreground text-center">
-                      {uploading ? "Enviando..." : "Clique para upload"}
+                    <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                    <span className="text-sm text-muted-foreground text-center">
+                      {uploading
+                        ? "Enviando..."
+                        : "Clique para adicionar imagem"}
+                    </span>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      PNG, JPG até 5MB
                     </span>
                     <input
                       type="file"
@@ -389,10 +397,10 @@ export default function Convenios() {
                   <img
                     src={c.logo_url}
                     alt={c.name}
-                    className="h-12 w-12 rounded-lg object-contain border border-border bg-muted/30 shrink-0"
+                    className="h-16 w-24 rounded-lg object-cover border border-border shrink-0"
                   />
                 ) : (
-                  <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                  <div className="h-16 w-24 rounded-lg bg-muted flex items-center justify-center shrink-0">
                     <Handshake className="h-6 w-6 text-muted-foreground" />
                   </div>
                 )}

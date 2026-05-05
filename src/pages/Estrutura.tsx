@@ -18,7 +18,7 @@ const Estrutura = () => {
       const { data, error } = await supabase
         .from("facilities")
         .select(
-          "id, name, description, capacity, rating, image_url, facility_images(id, url, order_index)",
+          "id, name, description, capacity, rating, image_url, reserva_ativa, facility_images(id, url, order_index).order(order_index)",
         )
         .order("name", { ascending: true });
       if (!error && data) setRows(data as FacilityRow[]);
