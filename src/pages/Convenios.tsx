@@ -4,14 +4,11 @@ import {
   Phone,
   MessageCircle,
   MapPin,
-  Globe,
   Handshake,
   ExternalLink,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
 const CATEGORIES: Record<string, string> = {

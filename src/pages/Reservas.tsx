@@ -62,7 +62,7 @@ const Reservas = () => {
     }
     fetchFacilities();
     fetchMyReservations();
-  }, [user]);
+  }, [user, navigate]);
 
   const fetchFacilities = async () => {
     const { data } = await supabase.from("facilities").select("id, name, capacity");

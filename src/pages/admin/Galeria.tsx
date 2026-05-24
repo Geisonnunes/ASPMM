@@ -4,7 +4,6 @@ import {
   Plus,
   Trash2,
   Upload,
-  X,
   ArrowLeft,
   MoreVertical,
 } from "lucide-react";

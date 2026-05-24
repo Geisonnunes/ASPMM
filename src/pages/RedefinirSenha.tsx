@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,6 @@ const RedefinirSenha = () => {
   const [showConfirmar, setShowConfirmar] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sessaoValida, setSessaoValida] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     // Verifica se há sessão ativa vinda do link de recuperação
