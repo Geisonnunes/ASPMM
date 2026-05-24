@@ -180,7 +180,7 @@ export default function Convenios() {
     );
   };
 
-  const handleDelete = async (id: string, name: string) => {
+  const handleDelete = async (id: string) => {
     const { error } = await supabase.from("partnerships").delete().eq("id", id);
     if (error) {
       toast.error("Erro ao excluir.");

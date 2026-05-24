@@ -15,7 +15,7 @@ export async function uploadToPhotosBucket(
   file: File,
   pathPrefix: string,
 ): Promise<{ publicUrl: string; path: string } | { error: string }> {
-  const safeName = file.name.replace(/[^\w.\-]/g, "_");
+  const safeName = file.name.replace(/[^\w.-]/g, "_");
   const path = `${pathPrefix.replace(/\/$/, "")}/${crypto.randomUUID()}-${safeName}`;
   const { error } = await supabase.storage
     .from(BUCKET)
