@@ -25,9 +25,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
 const items = [
@@ -48,20 +46,6 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const { signOut } = useAuth();
-  const [naoLidas, setNaoLidas] = useState(0);
-
-  useEffect(() => {
-    const load = async () => {
-      const { count } = await supabase
-        .from("contact_messages")
-        .select("*", { count: "exact", head: true })
-        .eq("is_read", false);
-      setNaoLidas(count ?? 0);
-    };
-    load();
-    const interval = setInterval(load, 60000); // atualiza a cada 1 minuto
-    return () => clearInterval(interval);
-  }, []);
   const navigate = useNavigate();
 
   const handleSignOut = async () => {

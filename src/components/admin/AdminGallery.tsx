@@ -108,7 +108,7 @@ const AdminGallery = () => {
       e.target.value = "";
       return;
     }
-    const safeName = file.name.replace(/[^\w.\-]/g, "_");
+    const safeName = file.name.replace(/[^\w.-]/g, "_");
     const path = `${selectedId}/${crypto.randomUUID()}-${safeName}`;
     const { error: upErr } = await supabase.storage
       .from("photos")

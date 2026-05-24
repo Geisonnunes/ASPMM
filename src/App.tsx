@@ -32,8 +32,6 @@ import InformacoesAdmin from "./pages/admin/Informacoes.tsx";
 import ConveniosAdmin from "./pages/admin/Convenios.tsx";
 import EquipeAdmin from "./pages/admin/Equipe.tsx";
 import Espacos from "./pages/admin/Espacos.tsx";
-import Avisos from "./pages/admin/Avisos.tsx";
-
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -41,7 +39,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter basename="/preview">
         <AuthProvider>
           <MustChangePasswordGuard>
             <Routes>
@@ -85,7 +83,6 @@ const App = () => (
                 <Route path="informacoes" element={<InformacoesAdmin />} />
                 <Route path="convenios" element={<ConveniosAdmin />} />
                 <Route path="equipe" element={<EquipeAdmin />} />
-                <Route path="avisos" element={<Avisos />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   Plus,
   Trash2,
-  GripVertical,
   HelpCircle,
   ScrollText,
   Save,
