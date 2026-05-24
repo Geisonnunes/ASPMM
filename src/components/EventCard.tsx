@@ -28,7 +28,6 @@ interface EventCardProps {
 }
 
 const EventCard = ({
-  id,
   title,
   date,
   location,

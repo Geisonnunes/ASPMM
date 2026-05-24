@@ -18,7 +18,7 @@ const Login = () => {
   const navigate = useNavigate();
 
   const resolverEmail = async (valor: string): Promise<string | null> => {
-    const eCPF = /^[\d.\-]+$/.test(valor.trim());
+    const eCPF = /^[\d.-]+$/.test(valor.trim());
     if (!eCPF) return valor.trim();
 
     const cpfLimpo = valor.replace(/\D/g, "");

@@ -32,7 +32,6 @@ interface FacilityCardProps {
 }
 
 const FacilityCard = ({
-  id,
   name,
   description,
   capacity,

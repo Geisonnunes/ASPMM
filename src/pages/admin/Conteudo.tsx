@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   Save,
-  Upload,
-  X,
   Image as ImageIcon,
   Trash2,
   Plus,
@@ -49,7 +47,6 @@ export default function Conteudo() {
   const [values, setValues] = useState<Record<string, string>>(DEFAULTS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>("");
 
   // Carrossel
@@ -138,32 +135,6 @@ export default function Conteudo() {
 
   const set = (key: string, value: string) =>
     setValues((v) => ({ ...v, [key]: value }));
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Máximo 10MB.");
-      return;
-    }
-    setUploading(true);
-    const ext = file.name.split(".").pop();
-    const path = `hero/banner_${Date.now()}.${ext}`;
-    const { error } = await supabase.storage
-      .from("photos")
-      .upload(path, file, { upsert: true });
-    if (error) {
-      toast.error("Erro ao enviar: " + error.message);
-      setUploading(false);
-      return;
-    }
-    const { data } = supabase.storage.from("photos").getPublicUrl(path);
-    set("hero_image_url", data.publicUrl);
-    setImagePreview(data.publicUrl);
-    setUploading(false);
-    toast.success("Imagem enviada! Clique em Salvar para aplicar.");
-    e.target.value = "";
-  };
 
   const handleCarouselUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
