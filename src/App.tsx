@@ -39,7 +39,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter basename="/preview">
         <AuthProvider>
           <MustChangePasswordGuard>
             <Routes>
