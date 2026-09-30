@@ -1,4 +1,4 @@
-# ASPMM — Associação dos Servidores Públicos Municipais de Marília
+# ASPMM:  Associação dos Servidores Públicos Municipais de Marília
 
 Site institucional e painel administrativo da ASPMM, desenvolvido com React, TypeScript, Supabase e TailwindCSS.
 
