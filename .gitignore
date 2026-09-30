@@ -8,6 +8,10 @@ dist/
 dist-ssr/
 build/
 
+# Ferramentas de IA locais
+.agents/
+skills-lock.json
+
 # Variáveis de ambiente — NUNCA commitar
 .env
 .env.local
